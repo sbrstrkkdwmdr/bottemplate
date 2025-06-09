@@ -299,7 +299,7 @@ export class Debug extends Command {
                         'WhatIf',
                     ];
                     switch (this.args.inputstr.toLowerCase()) {
-                        case 'badgeweightsystem': case 'badgeweight': case 'badgeweightseed': case 'badgerank':case 'bws':
+                        case 'badgeweightsystem': case 'badgeweight': case 'badgeweightseed': case 'badgerank': case 'bws':
                             resString = 'BadgeWeightSeed';
                             break;
                         case 'firstplaceranks': case 'fpr': case 'fp': case '#1s': case 'first': case '#1': case '1s':
@@ -708,8 +708,10 @@ export class Prefix extends Command {
         } else {
             helper.vars.config.prefix = this.args.newPrefix;
             this.ctn.content = `Prefix set to \`${this.args.newPrefix}\``;
+            const configpath = helper.vars.path.precomp + '/config/config.json'
+            fs.writeFileSync(configpath, JSON.stringify(helper.vars.config, null, 1));
         }
-        
+
         this.send();
     }
 }

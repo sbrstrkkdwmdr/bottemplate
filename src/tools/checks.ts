@@ -10,8 +10,8 @@ export function checkConfig() {
         throw new Error('missing `token` value in config');
     }
     if (!config.hasOwnProperty("prefix") || typeof config["prefix"] != "string") {
-        helper.tools.log.stdout("Prefix value is either missing or an invalid type\nThe default value of `sbr-` will be used");
-        config['prefix'] = 'sbr-';
+        helper.tools.log.stdout("Prefix value is either missing or an invalid type\nThe default value of `!` will be used");
+        config['prefix'] = '!';
     }
     if (!config.hasOwnProperty("owners")) {
         helper.tools.log.stdout("owners value is either missing or an invalid type\nThe default value of `['INVALID_ID']` will be used");
