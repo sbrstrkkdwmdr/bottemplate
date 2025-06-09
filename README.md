@@ -119,6 +119,11 @@ class Test extends Command {
 -   for args that use flags, you can use this template code:
 
 ```ts
+// note - 
+// this.args are parameters that can be set
+// this.input.args is a string array that is generated from the message calling the command
+// in `!rs -p 2 -d` the args would be ['-p' '2' '-d']
+
 // strings and numbers
 // "-page 2" -> page = 2
 if (this.input.args.includes("-page")) {
