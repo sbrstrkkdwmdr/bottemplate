@@ -1,0 +1,9 @@
+{
+    "token": "xxx",
+    "prefix": "xxx",
+    "owners": ["id1", "id2"],
+    "logs": {
+        "console": true,
+        "file": true
+    }
+}
