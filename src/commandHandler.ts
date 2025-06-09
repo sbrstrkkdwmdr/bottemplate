@@ -39,63 +39,41 @@ export async function onInteraction(interaction: Discord.Interaction) {
     runCommand(cmd, null, interaction, args, true, 'interaction');
 }
 
-const rslist = [
-    'recent', 'recentscore', 'rs', 'r',
-    'recenttaiko', 'rt',
-    'recentfruits', 'rf', 'rctb',
-    'recentmania', 'rm',
-    'rslist', 'recentlist', 'rl',
-    'recentlisttaiko', 'rlt',
-    'recentlistfruits', 'rlf', 'rlctb', 'rlc',
-    'recentlistmania', 'rlm',
-    'rb', 'recentbest', 'rsbest',
-];
-const scorelist = [
-    'firsts', 'firstplaceranks', 'fpr', 'fp', '#1s', 'first', '#1', '1s',
-    'leaderboard', 'maplb', 'mapleaderboard', 'ml',
-    'nochokes', 'nc',
-    'osutop', 'top', 't', 'ot', 'topo', 'toposu',
-    'taikotop', 'toptaiko', 'tt', 'topt',
-    'ctbtop', 'fruitstop', 'catchtop', 'topctb', 'topfruits', 'topcatch', 'tf', 'tctb', 'topf', 'topc',
-    'maniatop', 'topmania', 'tm', 'topm',
-    'scores', 'c',
-    'pinned', 'pins'
-].concat(rslist).sort((a, b) => b.length - a.length);
-
 const infoArgs = ['uptime', 'server', 'website', 'timezone', 'version', 'v', 'dependencies', 'deps', 'source'];
 
 // permissions
 function commandCheck(cmd: string, message: Discord.Message, interaction: Discord.ChatInputCommandInteraction, canReply: boolean) {
-    //perms bot needs
+    // commands that use embeds
     const requireEmbedCommands: string[] = [
-        //gen
         'help', 'commands', 'list', 'command', 'h',
         'info', 'i',
         'invite',
         'ping',
         'stats',
-        //admin
         'checkperms', 'fetchperms', 'checkpermissions', 'permissions', 'perms',
         'clear',
         'find', 'get',
         'prefix', 'servers', 'userinfo'
-    ].concat(scorelist);
+    ];
 
+    // commands where the bot requires admin in the current server
     const botRequireAdmin: string[] = [
         'checkperms', 'fetchperms', 'checkpermissions', 'permissions', 'perms',
         'get',
         'userinfo',
     ];
 
-    //perms user needs
+    // commands where user needs either admin or owner status
     const userRequireAdminOrOwner: string[] = [
         'checkperms', 'fetchperms', 'checkpermissions', 'permissions', 'perms',
     ];
 
+    // commands where user needs owner 
     const userRequireOwner: string[] = [
         'crash', 'clear', 'debug', 'servers'
     ];
 
+    // list of commands that are disabled for whatever reason
     const disabled: string[] = [
     ];
 
@@ -156,24 +134,6 @@ function commandCheck(cmd: string, message: Discord.Message, interaction: Discor
 }
 
 function commandSelect(cmd: string, args: string[]) {
-    let tnum: string;
-    if (scorelist.some(x => cmd.startsWith(x)) && !scorelist.some(x => cmd == x)) {
-        let cont: boolean = true;
-        scorelist.some(x => {
-            if (cmd.startsWith(x) && cont) {
-                tnum = cmd.replace(x, '');
-                if (!isNaN(+tnum)) {
-                    cmd = x;
-                    cont = false;
-                }
-            }
-            return null;
-        });
-    }
-    if (!isNaN(+tnum)) {
-        if (rslist.includes(cmd)) args.push('-p', tnum);
-        else args.push('-parse', tnum);
-    }
     if (infoArgs.some(x => x.toLowerCase() == cmd.toLowerCase())) {
         args = [cmd];
         cmd = 'info';

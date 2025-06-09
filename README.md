@@ -2,7 +2,30 @@
 
 discord.js bot template based off of [SSoB](https://github.com/sbrstrkkdwmdr/ssob)
 
+to add custom commands see [here](#adding-commands) </br>
 
+commands that are already in the bot:
+
+-   help
+-   info
+-   invite
+-   ping
+-   roll
+-   stats
+
+### Admin only
+
+-   checkperms
+-   find
+-   prefix
+
+### Owner only
+
+-   clear
+-   crash
+-   debug
+-   leaveguild
+-   servers
 
 ## Install/setup
 
@@ -62,3 +85,169 @@ disabling these permissions will disable the commands listed
 | -------- | ------- | ---------------------------------------------------- |
 | console  | boolean | Logs are output to the console                       |
 | file     | boolean | Logs are saved to the logs folder (`dist/src/logs/`) |
+
+## adding commands
+
+### creating command
+
+-   extend the `Command` class from `src/commands/command.ts` or copy-paste the command template in the same file (you can use the commands already implemented such as ping as reference)
+-   set the name property in the constructor
+
+-   to add args, modify the args property in the new command and then set the default value of each arg in the constructor
+
+```ts
+class Test extends Command {
+    protected declare args: {
+        test: boolean;
+        page: number;
+        mode: "main" | "alternate";
+    };
+    constructor() {
+        super();
+        this.name = "Test";
+        this.args = {
+            test: false,
+            page: 0,
+            mode: "main",
+        };
+    }
+    // ...
+}
+```
+
+-   to implement message args, modify the `setArgsMsg()` method
+-   for args that use flags, you can use this template code:
+
+```ts
+// strings and numbers
+// "-page 2" -> page = 2
+if (this.input.args.includes("-page")) {
+    const temp = helper.tools.commands.parseArg(
+        this.input.args,
+        "-page",
+        "number",
+        this.args.ar
+    );
+    this.args.page = temp.value;
+    this.input.args = temp.newArgs;
+}
+
+// booleans
+// "-test" -> test = true
+if (this.input.args.includes("-test")) {
+    this.args.test = true;
+}
+
+// "-alt" -> mode = alt
+if (this.input.args.includes("-alt")) {
+    this.args.mode = "alternate";
+}
+
+// args with aliases
+// "-p 4" -> page = 4
+// "-page 4" -> page = 4
+const pageArgFinder = helper.tools.commands.matchArgMultiple(
+    ["-p", "-page"],
+    this.input.args,
+    true,
+    "number",
+    false,
+    true
+);
+if (pageArgFinder.found) {
+    this.args.page = pageArgFinder.output;
+    this.input.args = pageArgFinder.args;
+}
+```
+
+-   to implement interaction args, modify the `setArgsInteract()` method
+-   for each arg, use the various getters in `interaction.options`
+    eg.
+
+```ts
+this.args.page = interaction.options.getInteger("page");
+```
+
+-   button args can either be passed via the `overrides` property in the button handler, or can be retrieved from param files stored in cache.
+-   buttons such as page buttons can be used like so:
+
+```ts
+helper.tools.commands.buttonPage(page, maxPage, this.input.buttonType);
+```
+
+using param files:
+
+```ts
+const temp = helper.tools.commands.getButtonArgs(this.input.id);
+if (temp.error) {
+    interaction.followUp({
+        content: helper.vars.errors.paramFileMissing,
+        flags: Discord.MessageFlags.Ephemeral,
+        allowedMentions: { repliedUser: false },
+    });
+    helper.tools.commands.disableAllButtons(this.input.message);
+    return;
+}
+this.args.page = temp.page;
+```
+
+-   each setArgs method is called via `this.setArgs()` when needed, so you can just call that method instead of each individual method
+-   to retrieve override args, modify the `getOverrides()` method
+
+```ts
+    getOverrides(): void {
+        if (!this.input.overrides) return; // do nothing if no override values are set
+        if (this.input.overrides?.page != null) {
+            this.args.page = this.input.overrides.page;
+        }
+    }
+```
+
+-   overrides are stored in `this.input.overrides`
+-   getOverrides isn't stored in setArgs, so it make sure to add it to the execute method if needed
+-   if you wish to log each command used, make sure to call `this.logInput()` after `this.setArgs()`
+
+-   if the command is meant to output a message, make sure to set the content via `this.ctn`, and call `this.send()` afterwards
+
+```ts
+async execute(){
+    this.ctn.content = "Hello, world!";
+    this.send();
+}
+```
+
+-   if the command uses `this.send()` multiple times you can clear `this.ctn` with `this.voidcontent()`
+
+```ts
+async execute(){
+    this.ctn.content = "Hello, world!";
+    this.send();
+    this.voidcontent();
+    const embed = new Discord.EmbedBuilder()
+        .setTitle("Hello, world!")
+        .setDescription("Hello, world!");
+    this.ctn.embeds = [embed];
+    this.send();
+}
+```
+
+-   interaction commands only allow one reply at a time, so make sure to avoid sending multiple replies if possible. If multiple are needed, you can always set `this.ctn.edit` to true after the first reply
+-   interaction commands also time out after a few seconds, so if the command takes a while to load, you can send a reply with a loading message, then at the end update it with `this.ctn.edit` set to true
+
+-   optionally, you can also let your command be accessible in the help command. To do this, add it to `cmds[]` in `src/vars/commandData.ts`
+
+### adding command to the command handlers
+
+-   in `src/commandHandler` add the command name and it's aliases to the switch statement `commandSelect()` like so:
+
+```ts
+case 'test':
+    command = new helper.commands.command.Test();
+    break;
+```
+
+-   if the command uses embeds, or has other requirements, you can add it's name to the arrays in commandCheck
+
+-   if the command also takes button inputs, you can add it to the switch statement at the bottom of `async onInteraction()` in `src/buttonHandler.ts`
+
+-   if the command is meant to be a `/` (slash) command add it to `src/slashCommands.ts` at the bottom of `commands?.set` in `run()`
