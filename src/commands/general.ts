@@ -7,7 +7,7 @@ import pkgjson from '../../package.json';
 import { Command } from './command.js';
 
 export class Help extends Command {
-    declare protected args: {
+    declare protected params: {
         rdm: boolean;
         commandfound: boolean;
         commandCategory: string;
@@ -16,57 +16,57 @@ export class Help extends Command {
     constructor() {
         super();
         this.name = 'Help';
-        this.args = {
+        this.params = {
             rdm: false,
             commandfound: false,
             commandCategory: 'default',
             command: undefined,
         };
     }
-    async setArgsMsg() {
+    async setParamsMsg() {
         this.commanduser = this.input.message.author;
-        this.args.command = this.input.args[0];
+        this.params.command = this.input.args[0];
         if (!this.input.args[0]) {
-            this.args.command = null;
+            this.params.command = null;
         }
     }
-    async setArgsInteract() {
+    async setParamsInteract() {
         const interaction = this.input.interaction as Discord.ChatInputCommandInteraction;
         this.commanduser = interaction?.member?.user ?? interaction?.user;
-        this.args.command = interaction.options.getString('command');
+        this.params.command = interaction.options.getString('command');
     }
-    async setArgsBtn() {
+    async setParamsBtn() {
         if (!this.input.message.embeds[0]) return;
         const interaction = (this.input.interaction as Discord.ButtonInteraction);
         this.commanduser = interaction?.member?.user ?? this.input.interaction?.user;
         if (this.input.buttonType == 'Random') {
-            this.args.rdm = true;
+            this.params.rdm = true;
         }
         switch (this.input.buttonType) {
             case 'Random':
-                this.args.rdm = true;
+                this.params.rdm = true;
                 break;
             case 'Detailed':
-                this.args.command = null;
+                this.params.command = null;
                 break;
         }
         const curembed: Discord.Embed = this.input.message.embeds[0];
         if (this.input.buttonType == 'Detailed' && curembed.description.includes('Prefix is')) {
-            this.args.command = 'list';
+            this.params.command = 'list';
         }
     }
     getOverrides(): void {
         if (!this.input.overrides) return;
         if (this.input.overrides?.ex != null) {
-            this.args.command = this.input?.overrides?.ex + '';
+            this.params.command = this.input?.overrides?.ex + '';
         }
     }
     async execute() {
-        await this.setArgs();
+        await this.setParams();
         this.logInput();
         // do stuff
-        if (this.args.rdm == true) {
-            this.args.command = this.rdmp('cmds');
+        if (this.params.rdm == true) {
+            this.params.command = this.rdmp('cmds');
         }
         const buttons = new Discord.ActionRowBuilder()
             .setComponents(
@@ -103,12 +103,12 @@ export class Help extends Command {
             new Discord.ActionRowBuilder()
                 .setComponents(selectCategoryMenu)
         );
-        let curpick: bottypes.commandInfo[] = helper.tools.commands.getCommands(this.args.commandCategory);
+        let curpick: bottypes.commandInfo[] = helper.tools.commands.getCommands(this.params.commandCategory);
 
         if (curpick.length == 0) {
             curpick = helper.tools.commands.getCommands('general');
         }
-        if (this.args.commandfound == true) {
+        if (this.params.commandfound == true) {
             for (let i = 0; i < curpick.length && i < 25; i++) {
                 inputMenu.addOptions(
                     new Discord.StringSelectMenuOptionBuilder()
@@ -161,7 +161,7 @@ export class Help extends Command {
      *  make into smaller separate functions
      * */
     getemb() {
-        if (this.args.command == 'list') {
+        if (this.params.command == 'list') {
             const commandlist: {
                 category: string;
                 cmds: string[];
@@ -196,20 +196,20 @@ export class Help extends Command {
                     text: 'Website: https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands | Github: https://github.com/sbrstrkkdwmdr/sbrbot/tree/ts'
                 });
             this.ctn.embeds = [clembed];
-            this.args.commandCategory = 'default';
-        } else if (this.args.command != null) {
-            const fetchcmd = this.args.command;
+            this.params.commandCategory = 'default';
+        } else if (this.params.command != null) {
+            const fetchcmd = this.params.command;
             const commandInfo = new Discord.EmbedBuilder()
                 .setColor(helper.vars.colours.embedColour.info.dec);
             if (helper.tools.commands.getCommand(fetchcmd)) {
                 const res = helper.tools.commands.getCommand(fetchcmd);
-                this.args.commandfound = true;
-                this.args.commandCategory = res.category;
+                this.params.commandfound = true;
+                this.params.commandCategory = res.category;
                 this.commandEmb(res, commandInfo);
-            } else if (this.args.command.toLowerCase().includes('category')) {
-                let sp = this.args.command.toLowerCase().split('category')[1];
+            } else if (this.params.command.toLowerCase().includes('category')) {
+                let sp = this.params.command.toLowerCase().split('category')[1];
                 if (sp == 'all') {
-                    this.args.command = 'list';
+                    this.params.command = 'list';
                     this.getemb();
                 } else {
                     let c = this.categorise(sp);
@@ -217,16 +217,16 @@ export class Help extends Command {
                         commandInfo
                             .setTitle(helper.tools.formatter.toCapital(sp) + " Commands")
                             .setDescription(c);
-                        this.args.commandCategory = sp;
+                        this.params.commandCategory = sp;
                     } else {
-                        this.args.command = null;
+                        this.params.command = null;
                         this.getemb();
                         return;
                     }
                 }
             }
             else {
-                this.args.command = null;
+                this.params.command = null;
                 this.getemb();
                 return;
             }
@@ -250,7 +250,7 @@ export class Help extends Command {
                 .setFooter({
                     text: 'Website: https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands | Github: https://github.com/sbrstrkkdwmdr/sbrbot/tree/ts'
                 })];
-            this.args.commandCategory = 'default';
+            this.params.commandCategory = 'default';
         }
     }
     rdmp(w: string) {
@@ -264,7 +264,7 @@ export class Help extends Command {
         for (let i = 0; i < cmds.length; i++) {
             desctxt += `\n\`${cmds[i].name}\`: ${cmds[i].description.split('.')[0]}`;
         }
-        this.args.commandfound = true;
+        this.params.commandfound = true;
         if (desctxt.length > 4000) {
             desctxt = desctxt.slice(0, 3900);
             desctxt += "\n\nThe text has reached maximum length. See [here](https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands) for the rest of the commands";
@@ -273,20 +273,20 @@ export class Help extends Command {
     }
 }
 export class Info extends Command {
-    declare protected args: {};
+    declare protected params: {};
     constructor() {
         super();
         this.name = 'Info';
     }
-    async setArgsMsg() {
+    async setParamsMsg() {
         this.commanduser = this.input.message.author;
     }
-    async setArgsInteract() {
+    async setParamsInteract() {
         const interaction = this.input.interaction as Discord.ChatInputCommandInteraction;
         this.commanduser = interaction?.member?.user ?? interaction?.user;
     }
     async execute() {
-        await this.setArgs();
+        await this.setParams();
         this.logInput(true);
         // do stuff
         const buttons: Discord.ActionRowBuilder = new Discord.ActionRowBuilder()
@@ -385,13 +385,13 @@ Bot Version: ${data.version}
     }
 }
 export class Invite extends Command {
-    declare protected args: {};
+    declare protected params: {};
     constructor() {
         super();
         this.name = 'Invite';
     }
     async execute() {
-        await this.setArgs();
+        await this.setParams();
         this.logInput(true);
         // do stuff
         this.ctn.content = helper.vars.versions.linkInvite;
@@ -399,13 +399,13 @@ export class Invite extends Command {
     }
 }
 export class Ping extends Command {
-    declare protected args: {};
+    declare protected params: {};
     constructor() {
         super();
         this.name = 'Ping';
     }
     async execute() {
-        await this.setArgs();
+        await this.setParams();
         this.logInput(true);
         // do stuff
         const trueping = `${helper.tools.formatter.toCapital(this.input.type)} latency: ${Math.abs((this.input.message ?? this.input.interaction).createdAt.getTime() - new Date().getTime())}ms`;
@@ -468,13 +468,13 @@ export class Ping extends Command {
     }
 }
 export class Stats extends Command {
-    declare protected args: {};
+    declare protected params: {};
     constructor() {
         super();
         this.name = 'Stats';
     }
     async execute() {
-        await this.setArgs();
+        await this.setParams();
         this.logInput(true);
         // do stuff
         const trueping = (this.input.message ?? this.input.interaction).createdAt.getTime() - new Date().getTime() + 'ms';

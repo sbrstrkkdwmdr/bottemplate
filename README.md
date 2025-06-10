@@ -105,7 +105,7 @@ class Test extends Command {
     constructor() {
         super();
         this.name = "Test";
-        this.args = {
+        this.params = {
             test: false,
             page: 0,
             mode: "main",
@@ -115,13 +115,11 @@ class Test extends Command {
 }
 ```
 
--   to implement message args, modify the `setArgsMsg()` method
+-   to implement message args, modify the `setParamsMsg()` method
 -   for args that use flags, you can use this template code:
 
 ```ts
 // note - 
-// this.args are parameters that can be set
-// this.input.args is a string array that is generated from the message calling the command
 // in `!rs -p 2 -d` the args would be ['-p' '2' '-d']
 
 // strings and numbers
@@ -131,21 +129,21 @@ if (this.input.args.includes("-page")) {
         this.input.args,
         "-page",
         "number",
-        this.args.ar
+        this.params.ar
     );
-    this.args.page = temp.value;
+    this.params.page = temp.value;
     this.input.args = temp.newArgs;
 }
 
 // booleans
 // "-test" -> test = true
 if (this.input.args.includes("-test")) {
-    this.args.test = true;
+    this.params.test = true;
 }
 
 // "-alt" -> mode = alt
 if (this.input.args.includes("-alt")) {
-    this.args.mode = "alternate";
+    this.params.mode = "alternate";
 }
 
 // args with aliases
@@ -160,17 +158,17 @@ const pageArgFinder = helper.tools.commands.matchArgMultiple(
     true
 );
 if (pageArgFinder.found) {
-    this.args.page = pageArgFinder.output;
+    this.params.page = pageArgFinder.output;
     this.input.args = pageArgFinder.args;
 }
 ```
 
--   to implement interaction args, modify the `setArgsInteract()` method
+-   to implement interaction args, modify the `setParamsInteract()` method
 -   for each arg, use the various getters in `interaction.options`
     eg.
 
 ```ts
-this.args.page = interaction.options.getInteger("page");
+this.params.page = interaction.options.getInteger("page");
 ```
 
 -   button args can either be passed via the `overrides` property in the button handler, or can be retrieved from param files stored in cache.
@@ -193,24 +191,24 @@ if (temp.error) {
     helper.tools.commands.disableAllButtons(this.input.message);
     return;
 }
-this.args.page = temp.page;
+this.params.page = temp.page;
 ```
 
--   each setArgs method is called via `this.setArgs()` when needed, so you can just call that method instead of each individual method
+-   each setParams method is called via `this.setParams()` when needed, so you can just call that method instead of each individual method
 -   to retrieve override args, modify the `getOverrides()` method
 
 ```ts
     getOverrides(): void {
         if (!this.input.overrides) return; // do nothing if no override values are set
         if (this.input.overrides?.page != null) {
-            this.args.page = this.input.overrides.page;
+            this.params.page = this.input.overrides.page;
         }
     }
 ```
 
 -   overrides are stored in `this.input.overrides`
--   getOverrides isn't stored in setArgs, so it make sure to add it to the execute method if needed
--   if you wish to log each command used, make sure to call `this.logInput()` after `this.setArgs()`
+-   getOverrides isn't stored in setParams, so it make sure to add it to the execute method if needed
+-   if you wish to log each command used, make sure to call `this.logInput()` after `this.setParams()`
 
 -   if the command is meant to output a message, make sure to set the content via `this.ctn`, and call `this.send()` afterwards
 

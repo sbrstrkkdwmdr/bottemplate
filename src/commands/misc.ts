@@ -4,45 +4,45 @@ import * as bottypes from '../types/bot.js';
 import { Command } from './command.js';
 
 export class Roll extends Command {
-    declare protected args: {
+    declare protected params: {
         maxNum: number;
         minNum: number;
     };
     constructor() {
         super();
         this.name = 'Roll';
-        this.args = {
+        this.params = {
             maxNum: 100,
             minNum: 0,
         };
     }
-    async setArgsMsg() {
-        this.args.maxNum = parseInt(this.input.args[0]);
-        this.args.minNum = parseInt(this.input.args[1]);
-        if (isNaN(this.args.maxNum) || !this.input.args[0]) {
-            this.args.maxNum = 100;
+    async setParamsMsg() {
+        this.params.maxNum = parseInt(this.input.args[0]);
+        this.params.minNum = parseInt(this.input.args[1]);
+        if (isNaN(this.params.maxNum) || !this.input.args[0]) {
+            this.params.maxNum = 100;
         }
-        if (isNaN(this.args.minNum) || !this.input.args[1]) {
-            this.args.minNum = 0;
+        if (isNaN(this.params.minNum) || !this.input.args[1]) {
+            this.params.minNum = 0;
         }
     }
-    async setArgsInteract() {
+    async setParamsInteract() {
         const interaction = this.input.interaction as Discord.ChatInputCommandInteraction;
-        this.args.maxNum = interaction.options.getNumber('max') ?? this.args.maxNum;
-        this.args.minNum = interaction.options.getNumber('min') ?? this.args.minNum;
+        this.params.maxNum = interaction.options.getNumber('max') ?? this.params.maxNum;
+        this.params.minNum = interaction.options.getNumber('min') ?? this.params.minNum;
     }
     async execute() {
-        await this.setArgs();
+        await this.setParams();
         this.logInput();
         // do stuff
 
-        if (isNaN(this.args.maxNum)) {
-            this.args.maxNum = 100;
+        if (isNaN(this.params.maxNum)) {
+            this.params.maxNum = 100;
         }
-        if (isNaN(this.args.minNum)) {
-            this.args.minNum = 0;
+        if (isNaN(this.params.minNum)) {
+            this.params.minNum = 0;
         }
-        const eq = Math.floor(Math.random() * (this.args.maxNum - this.args.minNum)) + this.args.minNum;
+        const eq = Math.floor(Math.random() * (this.params.maxNum - this.params.minNum)) + this.params.minNum;
         this.ctn.content = eq + '';
         this.send();
     }
