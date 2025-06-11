@@ -88,23 +88,26 @@ disabling these permissions will disable the commands listed
 
 ## adding commands
 
-### creating command
+### 1. creating commands
 
 -   extend the `Command` class from `src/commands/command.ts` or copy-paste the command template in the same file (you can use the commands already implemented such as ping as reference)
 -   set the name property in the constructor
 
--   to add args, modify the args property in the new command and then set the default value of each arg in the constructor
+-   to add parameters, modify the params property in the new command and then set the default value of each arg in the constructor
 
 ```ts
 class Test extends Command {
-    protected declare args: {
+    // set param types
+    // because params is already defined in Command, it requires the `declare` keyword
+    protected declare params: {
         test: boolean;
         page: number;
         mode: "main" | "alternate";
     };
     constructor() {
         super();
-        this.name = "Test";
+        this.name = "test"; // command automatically sets this to "Test" instead of "test"
+        // set params default values
         this.params = {
             test: false,
             page: 0,
@@ -115,16 +118,17 @@ class Test extends Command {
 }
 ```
 
--   to implement message args, modify the `setParamsMsg()` method
--   for args that use flags, you can use this template code:
+-   to implement message params, modify the `setParamsMsg()` method
+-   for params that use flags, you can use this template code:
 
 ```ts
-// note - 
+// note -
 // in `!rs -p 2 -d` the args would be ['-p' '2' '-d']
 
 // strings and numbers
 // "-page 2" -> page = 2
 if (this.input.args.includes("-page")) {
+    // built-in flag parser
     const temp = helper.tools.commands.parseArg(
         this.input.args,
         "-page",
@@ -163,7 +167,7 @@ if (pageArgFinder.found) {
 }
 ```
 
--   to implement interaction args, modify the `setParamsInteract()` method
+-   to implement interaction params, modify the `setParamsInteract()` method
 -   for each arg, use the various getters in `interaction.options`
     eg.
 
@@ -171,16 +175,17 @@ if (pageArgFinder.found) {
 this.params.page = interaction.options.getInteger("page");
 ```
 
--   button args can either be passed via the `overrides` property in the button handler, or can be retrieved from param files stored in cache.
+-   button params can either be passed via the `overrides` property in the button handler, or can be retrieved from param files stored in cache.
 -   buttons such as page buttons can be used like so:
 
 ```ts
 helper.tools.commands.buttonPage(page, maxPage, this.input.buttonType);
 ```
 
-using param files:
+-   using param files:
 
 ```ts
+// for button args that are stored in cache
 const temp = helper.tools.commands.getButtonArgs(this.input.id);
 if (temp.error) {
     interaction.followUp({
@@ -194,8 +199,24 @@ if (temp.error) {
 this.params.page = temp.page;
 ```
 
+-   to create param files
+
+```ts
+// from https://github.com/sbrstrkkdwmdr/ssob/blob/2ad48ebba57fce74ead27948f1b4f87b26be8773/src/commands/osu_scores.ts#L1436
+helper.tools.commands.storeButtonArgs(this.input.id, {
+    user: this.params.user,
+    searchid: this.params.searchid,
+    page: this.params.page + 1,
+    maxPage: this.scores.length,
+    mode: this.params.mode,
+    fails: this.params.showFails,
+    filterTitle: this.params.filter,
+});
+```
+
 -   each setParams method is called via `this.setParams()` when needed, so you can just call that method instead of each individual method
--   to retrieve override args, modify the `getOverrides()` method
+-   to retrieve override params, modify the `getOverrides()` method
+-   override params are used for some commands that don't directly send the interaction to the original command message (eg. page selectors)
 
 ```ts
     getOverrides(): void {
@@ -234,12 +255,12 @@ async execute(){
 }
 ```
 
--   interaction commands only allow one reply at a time, so make sure to avoid sending multiple replies if possible. If multiple are needed, you can always set `this.ctn.edit` to true after the first reply
+-   interaction commands only allow one reply at a time, so make sure to avoid sending multiple replies if possible. If multiple are needed, you can always set `this.ctn.edit` to true after the first reply or use `interaction.channel.send()`
 -   interaction commands also time out after a few seconds, so if the command takes a while to load, you can send a reply with a loading message, then at the end update it with `this.ctn.edit` set to true
 
 -   optionally, you can also let your command be accessible in the help command. To do this, add it to `cmds[]` in `src/vars/commandData.ts`
 
-### adding command to the command handlers
+### 2. adding command to the command handlers
 
 -   in `src/commandHandler` add the command name and it's aliases to the switch statement `commandSelect()` like so:
 
@@ -249,7 +270,7 @@ case 'test':
     break;
 ```
 
--   if the command uses embeds, or has other requirements, you can add it's name to the arrays in commandCheck
+-   if the command uses embeds, or has other requirements, you can add its name to the arrays in commandCheck
 
 -   if the command also takes button inputs, you can add it to the switch statement at the bottom of `async onInteraction()` in `src/buttonHandler.ts`
 
