@@ -63,6 +63,7 @@ export class Help extends Command {
     }
     async execute() {
         await this.setParams();
+        this.getOverrides();
         this.logInput();
         // do stuff
         if (this.params.rdm == true) {
