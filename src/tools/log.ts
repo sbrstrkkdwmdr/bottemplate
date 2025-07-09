@@ -2,8 +2,8 @@ import Discord from 'discord.js';
 import fs from 'fs';
 import moment from 'moment';
 import util from 'util';
-import { Command } from '../commands/command.js';
-import * as helper from '../helper.js';
+import { Command } from '../commands/command';
+import * as helper from '../helper';
 export function out(text: string, path: string, fileOnly?: boolean) {
     text = appendTime(text);
     if (helper.vars.config.logs.file) {

@@ -1,7 +1,7 @@
 import Discord from 'discord.js';
 import fs from 'fs';
-import * as helper from '../helper.js';
-import * as tooltypes from '../types/tools.js';
+import * as helper from '../helper';
+import * as tooltypes from '../types/tools';
 
 export function appendUrlParamsString(url: string, params: string[]) {
     let temp = url;
@@ -122,9 +122,9 @@ export function censorConfig() {
 }
 
 export function ubitflagsAsName(flags: Discord.UserFlagsBitField) {
-    helper.tools.log.stdout(flags);
+    log.stdout(flags);
     const fl = flags.toArray();
-    helper.tools.log.stdout(fl);
+    log.stdout(fl);
     return 'aa';
 }
 

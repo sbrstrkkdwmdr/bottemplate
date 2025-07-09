@@ -1,10 +1,10 @@
 // recurring functions
 import Discord from 'discord.js';
 import fs from 'fs';
-import * as helper from './helper.js';
+import * as helper from './helper';
+import * as log from './tools/log';
 export function loops() {
     setInterval(() => {
-        clearMapFiles();
         clearParseArgs();
     }, 60 * 60 * 1000);
 
@@ -12,7 +12,6 @@ export function loops() {
         clearCommandCache();
     }, 1000 * 60);
 
-    clearMapFiles();
     clearParseArgs();
     clearCommandCache();
 
@@ -125,46 +124,17 @@ export function loops() {
 
     // clear cache
     const cacheById = [
-        'bmsdata',
-        'mapdata',
-        'osudata',
-        'scoredata',
-        'maplistdata',
-        'firstscoresdata',
-        'weatherlocationdata',
     ];
 
     const permanentCache = [
-        'mapdataRanked', 'mapdataLoved', 'mapdataApproved',
-        'bmsdataRanked', 'bmsdataLoved', 'bmsdataApproved',
     ];
-
-    function clearMapFiles() {
-        const files = fs.readdirSync(`${helper.vars.path.files}/maps`);
-        for (const file of files) {
-            fs.stat(`${helper.vars.path.files}/maps` + file, (err, stat) => {
-                if (err) {
-                    return;
-                } else {
-                    if (file.includes('undefined')) {
-                        if ((new Date().getTime() - stat.mtimeMs) > (1000 * 60 * 60 * 12)) {
-                            fs.unlinkSync(`${helper.vars.path.files}/maps/` + file);
-                            helper.tools.log.stdout(`Deleted file ${helper.vars.path.files}/maps/` + file,);
-                            // fs.appendFileSync('logs/updates.log', `\ndeleted file "${file}" at ` + new Date().toLocaleString() + '\n')
-                        }
-                    }
-                }
-            });
-
-        }
-    }
 
     function clearCommandCache() {
         const files = fs.readdirSync(`${helper.vars.path.cache}/commandData`);
         for (const file of files) {
             fs.stat(`${helper.vars.path.cache}/commandData/` + file, (err, stat) => {
                 if (err) {
-                    helper.tools.log.stdout(err);
+                    log.stdout(err);
                     return;
                 } else {
                     if (permanentCache.some(x => file.startsWith(x))) {
@@ -173,26 +143,26 @@ export function loops() {
                         if ((new Date().getTime() - stat.mtimeMs) > (1000 * 60 * 60 * 24 * 28) && files.filter(x => permanentCache.some(x => file.startsWith(x))).length >= 100) {
                             //kill after 4 weeks
                             fs.unlinkSync(`${helper.vars.path.cache}/commandData/` + file);
-                            helper.tools.log.stdout(`Deleted file ${helper.vars.path.cache}/commandData/` + file,);
+                            log.stdout(`Deleted file ${helper.vars.path.cache}/commandData/` + file,);
                         }
                     }
                     else if (cacheById.some(x => file.startsWith(x))) {
                         if ((new Date().getTime() - stat.mtimeMs) > (1000 * 60 * 60 * 24)) {
                             fs.unlinkSync(`${helper.vars.path.cache}/commandData/` + file);
-                            helper.tools.log.stdout(`Deleted file ${helper.vars.path.cache}/commandData/` + file,);
+                            log.stdout(`Deleted file ${helper.vars.path.cache}/commandData/` + file,);
                             // fs.appendFileSync('logs/updates.log', `\ndeleted file "${file}" at ` + new Date().toLocaleString() + '\n')
                         }
                     } else if (file.includes('weatherdata')) {
                         if ((new Date().getTime() - stat.mtimeMs) > (1000 * 60 * 15)) {
                             fs.unlinkSync(`${helper.vars.path.cache}/commandData/` + file);
-                            helper.tools.log.stdout(`Deleted file ${helper.vars.path.cache}/commandData/` + file,);
+                            log.stdout(`Deleted file ${helper.vars.path.cache}/commandData/` + file,);
                             // fs.appendFileSync('logs/updates.log', `\ndeleted file "${file}" at ` + new Date().toLocaleString() + '\n')
                         }
                     }
                     else {
                         if ((new Date().getTime() - stat.mtimeMs) > (1000 * 60 * 60 * 3)) {
                             fs.unlinkSync(`${helper.vars.path.cache}/commandData/` + file);
-                            helper.tools.log.stdout(`Deleted file ${helper.vars.path.cache}/commandData/` + file,);
+                            log.stdout(`Deleted file ${helper.vars.path.cache}/commandData/` + file,);
                             // fs.appendFileSync('logs/updates.log', `\ndeleted file "${file}" at ` + new Date().toLocaleString() + '\n')
                         }
                     }
@@ -207,7 +177,7 @@ export function loops() {
             fs.stat(`${helper.vars.path.cache}/params/` + file, (err, stat) => {
                 if ((new Date().getTime() - stat.mtimeMs) > (1000 * 60 * 60 * 24)) {
                     fs.unlinkSync(`${helper.vars.path.cache}/params/` + file);
-                    helper.tools.log.stdout(`Deleted file ${helper.vars.path.cache}/params/` + file,);
+                    log.stdout(`Deleted file ${helper.vars.path.cache}/params/` + file,);
                     // fs.appendFileSync('logs/updates.log', `\ndeleted file "${file}" at ` + new Date().toLocaleString() + '\n')
                 }
             });

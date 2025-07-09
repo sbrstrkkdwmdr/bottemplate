@@ -1,6 +1,6 @@
-import * as bottypes from '../types/bot.js';
+import * as bottypes from '../types/bot';
 
-import * as buttonsObjs from './buttons.js';
+import * as buttonsObjs from './buttons';
 
 const range = (key: string): string[] => {
     const temp = ['>foo', '<foo', 'foo..bar', '!foo'];

@@ -1,7 +1,7 @@
 import Discord from 'discord.js';
-import * as helper from '../helper.js';
-import * as bottypes from '../types/bot.js';
-import { Command } from './command.js';
+import * as helper from '../helper';
+import * as bottypes from '../types/bot';
+import { Command } from './command';
 
 export class Roll extends Command {
     declare protected params: {

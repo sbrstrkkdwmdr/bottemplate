@@ -1,8 +1,8 @@
 import * as Discord from 'discord.js';
 import * as fs from 'fs';
-import * as helper from '../helper.js';
-import * as path from '../path.js';
-import * as bottypes from '../types/bot.js';
+import * as helper from '../helper';
+import * as path from '../path';
+import * as bottypes from '../types/bot';
 
 export function checkConfig() {
     const config = JSON.parse(fs.readFileSync(path.precomp + '/config/config.json', 'utf-8'));
@@ -10,26 +10,26 @@ export function checkConfig() {
         throw new Error('missing `token` value in config');
     }
     if (!config.hasOwnProperty("prefix") || typeof config["prefix"] != "string") {
-        helper.tools.log.stdout("Prefix value is either missing or an invalid type\nThe default value of `!` will be used");
+        log.stdout("Prefix value is either missing or an invalid type\nThe default value of `!` will be used");
         config['prefix'] = '!';
     }
     if (!config.hasOwnProperty("owners")) {
-        helper.tools.log.stdout("owners value is either missing or an invalid type\nThe default value of `['INVALID_ID']` will be used");
+        log.stdout("owners value is either missing or an invalid type\nThe default value of `['INVALID_ID']` will be used");
         config['owners'] = ['INVALID_ID'];
     }
     if (config.hasOwnProperty("logs")) {
         if (!config["logs"].hasOwnProperty("console") || typeof config["logs"]["console"] != "boolean") {
-            helper.tools.log.stdout("logs.console value is either missing or an invalid type\nThe default value of `true` will be used");
+            log.stdout("logs.console value is either missing or an invalid type\nThe default value of `true` will be used");
             config['logs']['console'] = false;
 
         }
         if (!config["logs"].hasOwnProperty("file") || typeof config["logs"]["file"] != "boolean") {
-            helper.tools.log.stdout("logs.file value is either missing or an invalid type\nThe default value of `true` will be used");
+            log.stdout("logs.file value is either missing or an invalid type\nThe default value of `true` will be used");
             config['logs']['file'] = false;
 
         }
     } else {
-        helper.tools.log.stdout("Missing log options. Using default values {console:true,file:true}");
+        log.stdout("Missing log options. Using default values {console:true,file:true}");
         config['logs'] = {
             console: true,
             file: true

@@ -24,6 +24,7 @@ export const label = {
         detailDefault: '<:details_default:1058601386935332974>',
         detailMore: '<:details_more:1136617552026550393>',
         detailLess: '<:details_less:1136617548230709249>',
+        random: '<:random:1058601388965363772>', //🎲s
     },
 }
 

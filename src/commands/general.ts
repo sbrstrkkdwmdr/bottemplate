@@ -1,10 +1,11 @@
 import Discord from 'discord.js';
-import * as helper from '../helper.js';
-import * as bottypes from '../types/bot.js';
-
 import moment from 'moment';
 import pkgjson from '../../package.json';
-import { Command } from './command.js';
+import * as helper from '../helper';
+import * as calculate from '../tools/calculate';
+import * as commandTools from '../tools/commands';
+import * as formatters from '../tools/formatters';
+import { Command } from './command';
 
 export class Help extends Command {
     declare protected params: {
@@ -57,9 +58,7 @@ export class Help extends Command {
     }
     getOverrides(): void {
         if (!this.input.overrides) return;
-        if (this.input.overrides?.ex != null) {
-            this.params.command = this.input?.overrides?.ex + '';
-        }
+        this.setParamOverride('command', 'ex');
     }
     async execute() {
         await this.setParams();
@@ -72,42 +71,46 @@ export class Help extends Command {
         const buttons = new Discord.ActionRowBuilder()
             .setComponents(
                 new Discord.ButtonBuilder()
-                    .setCustomId(`${helper.vars.versions.releaseDate}-Detailed-${this.name}-${this.commanduser.id}-${this.input.id}`)
-                    .setStyle(helper.vars.buttons.type.current)
-                    .setEmoji(helper.vars.buttons.label.main.detailed)
+                    .setCustomId(`${helper.versions.releaseDate}-Random-${this.name}-${this.commanduser.id}-${this.input.id}`)
+                    .setStyle(helper.buttons.type.current)
+                    .setEmoji(helper.buttons.label.main.random),
+                new Discord.ButtonBuilder()
+                    .setCustomId(`${helper.versions.releaseDate}-Detailed-${this.name}-${this.commanduser.id}-${this.input.id}`)
+                    .setStyle(helper.buttons.type.current)
+                    .setEmoji(helper.buttons.label.main.detailed)
             );
 
         this.getemb();
 
         const inputMenu = new Discord.StringSelectMenuBuilder()
-            .setCustomId(`${helper.vars.versions.releaseDate}-SelectMenu1-help-${this.commanduser.id}-${this.input.id}`)
+            .setCustomId(`${helper.versions.releaseDate}-SelectMenu1-help-${this.commanduser.id}-${this.input.id}`)
             .setPlaceholder('Select a command');
 
         const selectCategoryMenu = new Discord.StringSelectMenuBuilder()
-            .setCustomId(`${helper.vars.versions.releaseDate}-SelectMenu2-help-${this.commanduser.id}-${this.input.id}`)
+            .setCustomId(`${helper.versions.releaseDate}-SelectMenu2-help-${this.commanduser.id}-${this.input.id}`)
             .setPlaceholder('Select a command category')
             .setOptions(
                 new Discord.StringSelectMenuOptionBuilder()
                     .setEmoji('📜' as Discord.APIMessageComponentEmoji)
                     .setLabel('General')
-                    .setValue('CategoryMenu-gen'),
+                    .setValue('categorygen'),
                 new Discord.StringSelectMenuOptionBuilder()
                     .setEmoji('🤖' as Discord.APIMessageComponentEmoji)
                     .setLabel('Admin')
-                    .setValue('CategoryMenu-admin'),
+                    .setValue('categoryadmin'),
                 new Discord.StringSelectMenuOptionBuilder()
                     .setEmoji('❓' as Discord.APIMessageComponentEmoji)
                     .setLabel('Misc')
-                    .setValue('CategoryMenu-misc'),
+                    .setValue('categorymisc'),
             );
         this.ctn.components.push(
             new Discord.ActionRowBuilder()
                 .setComponents(selectCategoryMenu)
         );
-        let curpick: bottypes.commandInfo[] = helper.tools.commands.getCommands(this.params.commandCategory);
+        let curpick: helper.bottypes.commandInfo[] = commandTools.getCommands(this.params.commandCategory);
 
         if (curpick.length == 0) {
-            curpick = helper.tools.commands.getCommands('general');
+            curpick = commandTools.getCommands('general');
         }
         if (this.params.commandfound == true) {
             for (let i = 0; i < curpick.length && i < 25; i++) {
@@ -126,13 +129,17 @@ export class Help extends Command {
         }
         this.send();
     }
-    commandEmb(command: bottypes.commandInfo, embed) {
+    commandEmb(command: helper.bottypes.commandInfo, embed) {
         let usetxt = '';
         if (command.usage) {
             usetxt += `\`${helper.vars.config.prefix}${command.usage}\``;
         }
 
+        // let exceedTxt = '';
+        // let exceeds = false;
+
         const commandaliases = command.aliases && command.aliases.length > 0 ? command.aliases.join(', ') : 'none';
+        // let commandexamples = command.examples && command.examples.length > 0 ? command.examples.join('\n').replaceAll('PREFIXMSG', helper.vars.config.prefix) : 'none'
         const commandexamples = command.examples && command.examples.length > 0 ? command.examples.slice(0, 5).map(x => x.text).join('\n').replaceAll('PREFIXMSG', helper.vars.config.prefix) : 'none';
 
         embed.setTitle("Command info for: " + command.name)
@@ -168,7 +175,7 @@ export class Help extends Command {
                 cmds: string[];
             }[] = [];
 
-            for (const cmd of helper.vars.commandData.cmds) {
+            for (const cmd of helper.commandData.cmds) {
                 if (commandlist.map(x => x.category).includes(cmd.category)) {
                     const idx = commandlist.map(x => x.category).indexOf(cmd.category);
                     commandlist[idx].cmds.push(cmd.name);
@@ -181,7 +188,7 @@ export class Help extends Command {
             }
 
             const clembed = new Discord.EmbedBuilder()
-                .setColor(helper.vars.colours.embedColour.info.dec)
+                .setColor(helper.colours.embedColour.info.dec)
                 .setTitle('Command List')
                 .setURL('https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands')
                 .setDescription('use `/help <command>` to get more info on a command')
@@ -194,16 +201,16 @@ export class Help extends Command {
                     })
                 )
                 .setFooter({
-                    text: 'Website: https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands | Github: https://github.com/sbrstrkkdwmdr/sbrbot/tree/ts'
+                    text: 'Website: https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands | Github: https://github.com/sbrstrkkdwmdr/ssob/tree/ts'
                 });
             this.ctn.embeds = [clembed];
             this.params.commandCategory = 'default';
         } else if (this.params.command != null) {
             const fetchcmd = this.params.command;
             const commandInfo = new Discord.EmbedBuilder()
-                .setColor(helper.vars.colours.embedColour.info.dec);
-            if (helper.tools.commands.getCommand(fetchcmd)) {
-                const res = helper.tools.commands.getCommand(fetchcmd);
+                .setColor(helper.colours.embedColour.info.dec);
+            if (commandTools.getCommand(fetchcmd)) {
+                const res = commandTools.getCommand(fetchcmd);
                 this.params.commandfound = true;
                 this.params.commandCategory = res.category;
                 this.commandEmb(res, commandInfo);
@@ -216,7 +223,7 @@ export class Help extends Command {
                     let c = this.categorise(sp);
                     if (c != '') {
                         commandInfo
-                            .setTitle(helper.tools.formatter.toCapital(sp) + " Commands")
+                            .setTitle(formatters.toCapital(sp) + " Commands")
                             .setDescription(c);
                         this.params.commandCategory = sp;
                     } else {
@@ -235,7 +242,7 @@ export class Help extends Command {
             this.ctn.embeds = [commandInfo];
         } else {
             this.ctn.embeds = [new Discord.EmbedBuilder()
-                .setColor(helper.vars.colours.embedColour.info.dec)
+                .setColor(helper.colours.embedColour.info.dec)
                 .setTitle('Help')
                 .setURL('https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands')
                 .setDescription(`Prefix is: MSGPREFIX
@@ -249,19 +256,18 @@ export class Help extends Command {
 - Gamemode can be specified by using -(mode) in commands that support it (eg. -taiko)
 `.replaceAll('MSGPREFIX', helper.vars.config.prefix))
                 .setFooter({
-                    text: 'Website: https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands | Github: https://github.com/sbrstrkkdwmdr/sbrbot/tree/ts'
+                    text: 'Website: https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands | Github: https://github.com/sbrstrkkdwmdr/ssob/tree/ts'
                 })];
             this.params.commandCategory = 'default';
         }
     }
     rdmp(w: string) {
-        const fullyrando = Math.floor(Math.random() * helper.vars.commandData[w].length);
-        return helper.vars.commandData.cmds[fullyrando].name;
+        const fullyrando = Math.floor(Math.random() * helper.commandData[w].length);
+        return helper.commandData.cmds[fullyrando].name;
     }
     categorise(type: string) {
-        console.log(type);
         let desctxt = '';
-        const cmds = helper.tools.commands.getCommands(type);
+        const cmds = commandTools.getCommands(type);
         for (let i = 0; i < cmds.length; i++) {
             desctxt += `\n\`${cmds[i].name}\`: ${cmds[i].description.split('.')[0]}`;
         }
@@ -306,20 +312,20 @@ Axios: [${pkgjson.dependencies['axios'].replace('^', '')}](https://github.com/ax
 Sequelize: [${pkgjson.dependencies['sequelize'].replace('^', '')}](https://github.com/sequelize/sequelize/)
 Chart.js: [${pkgjson.dependencies['chart.js'].replace('^', '')}](https://www.chartjs.org/)
 sqlite3: [${pkgjson.dependencies['sqlite3'].replace('^', '')}](https://github.com/TryGhost/node-sqlite3)`,
-            uptime: `${helper.tools.calculate.secondsToTime(helper.vars.client.uptime / 1000)}`,
+            uptime: `${calculate.secondsToTime(helper.vars.client.uptime / 1000)}`,
             version: pkgjson.version,
             preGlobal: helper.vars.config.prefix.includes('`') ? `"${helper.vars.config.prefix}"` : `\`${helper.vars.config.prefix}\``,
-            server: helper.vars.versions.serverURL,
-            website: helper.vars.versions.website,
+            server: helper.versions.serverURL,
+            website: helper.versions.website,
             creator: 'https://sbrstrkkdwmdr.github.io/',
-            source: `https://github.com/sbrstrkkdwmdr/sbrbot/`,
+            source: `https://github.com/sbrstrkkdwmdr/ssob/`,
             shards: helper.vars.client?.shard?.count ?? 1,
             guilds: helper.vars.client.guilds.cache.size,
             users: helper.vars.client.users.cache.size,
 
         };
         const Embed = new Discord.EmbedBuilder()
-            .setColor(helper.vars.colours.embedColour.info.dec)
+            .setColor(helper.colours.embedColour.info.dec)
             .setTitle('Bot Information');
         if (this.input.args.length > 0) {
             ['uptime', 'server', 'website', 'timezone', 'version', 'v', 'dependencies', 'deps', 'source'];
@@ -374,7 +380,7 @@ Users: ${data.users}`,
                 .setDescription(`
 [Created by SaberStrike](${data.creator})
 [Commands](${data.website})
-Global prefix: ${data.preGlobal}
+Prefix: ${data.preGlobal}
 Bot Version: ${data.version}
 `);
         }
@@ -395,7 +401,7 @@ export class Invite extends Command {
         await this.setParams();
         this.logInput(true);
         // do stuff
-        this.ctn.content = helper.vars.versions.linkInvite;
+        this.ctn.content = helper.versions.linkInvite;
         this.send();
     }
 }
@@ -409,11 +415,11 @@ export class Ping extends Command {
         await this.setParams();
         this.logInput(true);
         // do stuff
-        const trueping = `${helper.tools.formatter.toCapital(this.input.type)} latency: ${Math.abs((this.input.message ?? this.input.interaction).createdAt.getTime() - new Date().getTime())}ms`;
+        const trueping = `${formatters.toCapital(this.input.type)} latency: ${Math.abs((this.input.message ?? this.input.interaction).createdAt.getTime() - new Date().getTime())}ms`;
 
         const pingEmbed = new Discord.EmbedBuilder()
             .setTitle('Pong!')
-            .setColor(helper.vars.colours.embedColour.info.dec)
+            .setColor(helper.colours.embedColour.info.dec)
             .setDescription(`
     Client latency: ${helper.vars.client.ws.ping}ms
     ${trueping}`);
@@ -431,9 +437,9 @@ export class Ping extends Command {
                         pingEmbed.setDescription(`
             Client latency: ${helper.vars.client.ws.ping}ms
             ${trueping}
-            ${helper.tools.formatter.toCapital(this.input.type)} edit latency: ${Math.abs(timeToEdit)}ms
+            ${formatters.toCapital(this.input.type)} edit latency: ${Math.abs(timeToEdit)}ms
             `);
-                        helper.tools.commands.sendMessage({
+                        commandTools.sendMessage({
                             type: this.input.type,
                             message: msg as Discord.Message,
                             interaction: msg as Discord.ChatInputCommandInteraction,
@@ -456,7 +462,7 @@ export class Ping extends Command {
                     pingEmbed.setDescription(`
         Client latency: ${helper.vars.client.ws.ping}ms
         ${trueping}
-        ${helper.tools.formatter.toCapital(this.input.type)} edit latency: ${Math.abs(timeToEdit)}ms
+        ${formatters.toCapital(this.input.type)} edit latency: ${Math.abs(timeToEdit)}ms
         `);
                     intRes.edit({
                         embeds: [pingEmbed]

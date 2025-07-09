@@ -1,5 +1,5 @@
 import * as Discord from 'discord.js';
-import * as helper from '../helper.js';
+import * as helper from '../helper';
 
 export function matchesString(first: string, second: string) {
     first = first.toLowerCase();

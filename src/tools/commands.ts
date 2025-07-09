@@ -1,7 +1,7 @@
 import * as Discord from 'discord.js';
 import fs from 'fs';
-import * as helper from '../helper.js';
-import * as bottypes from '../types/bot.js';
+import * as helper from '../helper';
+import * as bottypes from '../types/bot';
 
 export async function sendMessage(input: {
     type: 'message' | 'interaction' | 'link' | 'button' | "other",
@@ -280,25 +280,25 @@ export async function pageButtons(commandName: string, commanduser: Discord.User
     const pgbuttons: Discord.ActionRowBuilder = new Discord.ActionRowBuilder()
         .addComponents(
             new Discord.ButtonBuilder()
-                .setCustomId(`${helper.vars.versions.releaseDate}-BigLeftArrow-${commandName}-${commanduser.id}-${commandId}`)
-                .setStyle(helper.vars.buttons.type.current)
-                .setEmoji(helper.vars.buttons.label.page.first).setDisabled(false),
+                .setCustomId(`${helper.versions.releaseDate}-BigLeftArrow-${commandName}-${commanduser.id}-${commandId}`)
+                .setStyle(helper.buttons.type.current)
+                .setEmoji(helper.buttons.label.page.first).setDisabled(false),
             new Discord.ButtonBuilder()
-                .setCustomId(`${helper.vars.versions.releaseDate}-LeftArrow-${commandName}-${commanduser.id}-${commandId}`)
-                .setStyle(helper.vars.buttons.type.current)
-                .setEmoji(helper.vars.buttons.label.page.previous),
+                .setCustomId(`${helper.versions.releaseDate}-LeftArrow-${commandName}-${commanduser.id}-${commandId}`)
+                .setStyle(helper.buttons.type.current)
+                .setEmoji(helper.buttons.label.page.previous),
             new Discord.ButtonBuilder()
-                .setCustomId(`${helper.vars.versions.releaseDate}-Search-${commandName}-${commanduser.id}-${commandId}`)
-                .setStyle(helper.vars.buttons.type.current)
-                .setEmoji(helper.vars.buttons.label.page.search),
+                .setCustomId(`${helper.versions.releaseDate}-Search-${commandName}-${commanduser.id}-${commandId}`)
+                .setStyle(helper.buttons.type.current)
+                .setEmoji(helper.buttons.label.page.search),
             new Discord.ButtonBuilder()
-                .setCustomId(`${helper.vars.versions.releaseDate}-RightArrow-${commandName}-${commanduser.id}-${commandId}`)
-                .setStyle(helper.vars.buttons.type.current)
-                .setEmoji(helper.vars.buttons.label.page.next),
+                .setCustomId(`${helper.versions.releaseDate}-RightArrow-${commandName}-${commanduser.id}-${commandId}`)
+                .setStyle(helper.buttons.type.current)
+                .setEmoji(helper.buttons.label.page.next),
             new Discord.ButtonBuilder()
-                .setCustomId(`${helper.vars.versions.releaseDate}-BigRightArrow-${commandName}-${commanduser.id}-${commandId}`)
-                .setStyle(helper.vars.buttons.type.current)
-                .setEmoji(helper.vars.buttons.label.page.last),
+                .setCustomId(`${helper.versions.releaseDate}-BigRightArrow-${commandName}-${commanduser.id}-${commandId}`)
+                .setStyle(helper.buttons.type.current)
+                .setEmoji(helper.buttons.label.page.last),
         );
     return pgbuttons;
 }
@@ -318,9 +318,9 @@ export async function buttonsAddDetails(command: string, commanduser: Discord.Us
         case 0: {
             buttons.addComponents(
                 new Discord.ButtonBuilder()
-                    .setCustomId(`${helper.vars.versions.releaseDate}-Detail1-${command}-${commanduser.id}-${commandId}`)
-                    .setStyle(helper.vars.buttons.type.current)
-                    .setEmoji(helper.vars.buttons.label.main.detailMore),
+                    .setCustomId(`${helper.versions.releaseDate}-Detail1-${command}-${commanduser.id}-${commandId}`)
+                    .setStyle(helper.buttons.type.current)
+                    .setEmoji(helper.buttons.label.main.detailMore),
             );
         }
             break;
@@ -328,13 +328,13 @@ export async function buttonsAddDetails(command: string, commanduser: Discord.Us
             const temp: Discord.RestOrArray<Discord.AnyComponentBuilder> = [];
 
             const set0 = new Discord.ButtonBuilder()
-                .setCustomId(`${helper.vars.versions.releaseDate}-Detail0-${command}-${commanduser.id}-${commandId}`)
-                .setStyle(helper.vars.buttons.type.current)
-                .setEmoji(helper.vars.buttons.label.main.detailLess);
+                .setCustomId(`${helper.versions.releaseDate}-Detail0-${command}-${commanduser.id}-${commandId}`)
+                .setStyle(helper.buttons.type.current)
+                .setEmoji(helper.buttons.label.main.detailLess);
             const set2 = new Discord.ButtonBuilder()
-                .setCustomId(`${helper.vars.versions.releaseDate}-Detail2-${command}-${commanduser.id}-${commandId}`)
-                .setStyle(helper.vars.buttons.type.current)
-                .setEmoji(helper.vars.buttons.label.main.detailMore);
+                .setCustomId(`${helper.versions.releaseDate}-Detail2-${command}-${commanduser.id}-${commandId}`)
+                .setStyle(helper.buttons.type.current)
+                .setEmoji(helper.buttons.label.main.detailMore);
 
             if (disabled) {
                 if (disabled.compact == false) {
@@ -363,9 +363,9 @@ export async function buttonsAddDetails(command: string, commanduser: Discord.Us
         case 2: {
             buttons.addComponents(
                 new Discord.ButtonBuilder()
-                    .setCustomId(`${helper.vars.versions.releaseDate}-Detail1-${command}-${commanduser.id}-${commandId}`)
-                    .setStyle(helper.vars.buttons.type.current)
-                    .setEmoji(helper.vars.buttons.label.main.detailLess),
+                    .setCustomId(`${helper.versions.releaseDate}-Detail1-${command}-${commanduser.id}-${commandId}`)
+                    .setStyle(helper.buttons.type.current)
+                    .setEmoji(helper.buttons.label.main.detailLess),
             );
         }
             break;

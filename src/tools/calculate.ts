@@ -1,4 +1,4 @@
-import * as helper from '../helper.js';
+import * as helper from '../helper';
 /**
  * eg 1,000 -> 1k
  * 1,000,000 -> 1m

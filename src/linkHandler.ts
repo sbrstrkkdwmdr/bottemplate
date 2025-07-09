@@ -1,42 +1,44 @@
 import * as Discord from 'discord.js';
-import { Command } from './commands/command.js';
-import * as helper from './helper.js';
-import * as bottypes from './types/bot.js';
+import fs from 'fs';
+import https from 'https';
+import { Command, InputHandler } from './commands/command';
+import * as helper from './helper';
+import * as checks from './tools/checks';
+import * as commandTools from './tools/commands';
+import * as formatters from './tools/formatters';
 
-let command: Command;
-const overrides: bottypes.overrides = {
-
-};
-let id: number;
-export async function onMessage(message: Discord.Message) {
-    if (!(message.content.startsWith('http') || message.content.includes('osu.') || message.attachments.size > 0)) {
+export class LinkHandler extends InputHandler {
+    async onMessage(message: Discord.Message) {
+        if (!(message.content.startsWith('http') || message.content.includes('osu.') || message.attachments.size > 0)) {
+            return;
+        }
+        let canReply = true;
+        if (!checks.botHasPerms(message, ['ReadMessageHistory'])) {
+            canReply = false;
+        }
         return;
+        // this is just an example
+        if(message.content.startsWith('https://sbrstrkkdwmdr/skins/')){
+            this.overrides = {
+                id: message.content.split('https://sbrstrkkdwmdr/skins/')[1]
+            }
+            this.selected = new Command();
+            await this.runCommand(message);
+        }
     }
-    let canReply = true;
-    if (!helper.tools.checks.botHasPerms(message, ['ReadMessageHistory'])) {
-        canReply = false;
+    async onInteraction(interaction: Discord.Interaction) { }
+    async runCommand(message: Discord.Message, tid?: number) {
+        this.selected.setInput({
+            message,
+            interaction: null,
+            args: [],
+            date: new Date(),
+            id: tid ?? commandTools.getCmdId(),
+            overrides: {},
+            canReply: true,
+            type: "link",
+        });
+        await this.selected.execute();
+        this.selected = null;
     }
-
-
-    const messagenohttp = message.content.replace('https://', '').replace('http://', '').replace('www.', '');
-    if (messagenohttp.startsWith('testtesttest')) {
-        id = helper.tools.commands.getCmdId();
-        command = new helper.commands.gen.Info();
-        await runCommand(message);
-        return;
-    }
-}
-
-async function runCommand(message: Discord.Message,) {
-    command.setInput({
-        message,
-        interaction: null,
-        args: [],
-        date: new Date(),
-        id,
-        overrides,
-        canReply: true,
-        type: "link",
-    });
-    await command.execute();
 }

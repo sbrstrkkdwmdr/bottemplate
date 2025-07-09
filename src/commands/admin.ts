@@ -1,9 +1,10 @@
 import Discord from 'discord.js';
 import * as fs from 'fs';
-import * as helper from '../helper.js';
-import * as bottypes from '../types/bot.js';
-import * as tooltypes from '../types/tools.js';
-import { Command } from './command.js';
+import * as helper from '../helper';
+import * as checks from '../tools/checks';
+import * as commandTools from '../tools/commands';
+import * as log from '../tools/log';
+import { Command } from './command';
 
 export class CheckPerms extends Command {
     declare protected params: {
@@ -40,7 +41,7 @@ export class CheckPerms extends Command {
             this.params.searchUser = this.commanduser;
         }
 
-        if (!(helper.tools.checks.isAdmin(this.commanduser.id, this.input.message?.guildId) || helper.tools.checks.isOwner(this.commanduser.id))) {
+        if (!(checks.isAdmin(this.commanduser.id, this.input.message?.guildId) || checks.isOwner(this.commanduser.id))) {
             this.params.searchUser = this.commanduser;
         }
         const embed = new Discord.EmbedBuilder();
@@ -52,12 +53,12 @@ export class CheckPerms extends Command {
             embed
                 .setTitle(`${this.params.searchUser.username}'s Permissions`)
                 .setDescription(`**${perms}**`)
-                .setColor(helper.vars.colours.embedColour.admin.dec);
+                .setColor(helper.colours.embedColour.admin.dec);
 
         } catch (err) {
             embed.setTitle('Error')
                 .setDescription('An error occured while trying to get the permissions of the user.')
-                .setColor(helper.vars.colours.embedColour.admin.dec);
+                .setColor(helper.colours.embedColour.admin.dec);
 
         }
 
@@ -94,26 +95,26 @@ export class Clear extends Command {
     clearCache(type: string, embed: Discord.EmbedBuilder) {
         switch (type) {
             case 'normal': default: { //clears all temprary files (cache/commandData)
-                helper.tools.log.stdout(`manually clearing temporary files in ${helper.vars.path.cache}/commandData/`);
+                log.stdout(`manually clearing temporary files in ${helper.vars.path.cache}/commandData/`);
                 const curpath = `${helper.vars.path.cache}/commandData`;
                 const files = fs.readdirSync(curpath);
                 for (const file of files) {
                     const keep = ['Approved', 'Ranked', 'Loved', 'Qualified'];
                     if (!keep.some(x => file.includes(x))) {
                         fs.unlinkSync(`${curpath}/` + file);
-                        helper.tools.log.stdout(`Deleted file: ${curpath}/` + file);
+                        log.stdout(`Deleted file: ${curpath}/` + file);
                     }
                 }
                 embed.setDescription(`Clearing temporary files in ./cache/commandData/\n(ranked/loved/approved maps are kept)`);
             }
                 break;
             case 'all': { //clears all files in commandData
-                helper.tools.log.stdout(`manually clearing all files in ${helper.vars.path.cache}/commandData/`);
+                log.stdout(`manually clearing all files in ${helper.vars.path.cache}/commandData/`);
                 const curpath = `${helper.vars.path.cache}/commandData`;
                 const files = fs.readdirSync(curpath);
                 for (const file of files) {
                     fs.unlinkSync(`${curpath}/` + file);
-                    helper.tools.log.stdout(`Deleted file: ${curpath}/` + file);
+                    log.stdout(`Deleted file: ${curpath}/` + file);
                 }
                 embed.setDescription(`Clearing all files in ./cache/commandData/`);
             }
@@ -126,23 +127,23 @@ export class Clear extends Command {
             }
                 break;
             case 'errors': { //clears all errors
-                helper.tools.log.stdout(`manually clearing all err files in ${helper.vars.path.cache}/errors/`);
+                log.stdout(`manually clearing all err files in ${helper.vars.path.cache}/errors/`);
                 const curpath = `${helper.vars.path.cache}/errors`;
                 const files = fs.readdirSync(curpath);
                 for (const file of files) {
                     fs.unlinkSync(`${curpath}/` + file);
-                    helper.tools.log.stdout(`Deleted file: ${curpath}/` + file);
+                    log.stdout(`Deleted file: ${curpath}/` + file);
                 }
                 embed.setDescription(`Clearing error files in ./cache/errors/`);
             }
                 break;
             case 'params': {
-                helper.tools.log.stdout(`manually clearing all param files in ${helper.vars.path.cache}/params/`);
+                log.stdout(`manually clearing all param files in ${helper.vars.path.cache}/params/`);
                 const curpath = `${helper.vars.path.cache}/params`;
                 const files = fs.readdirSync(curpath);
                 for (const file of files) {
                     fs.unlinkSync(`${curpath}/` + file);
-                    helper.tools.log.stdout(`Deleted file: ${curpath}/` + file);
+                    log.stdout(`Deleted file: ${curpath}/` + file);
                 }
                 embed.setDescription(`Clearing param files in ./cache/params/`);
             }
@@ -177,7 +178,7 @@ export class Crash extends Command {
         this.ctn.content = 'executing crash command...';
         this.send();
         setTimeout(() => {
-            helper.tools.log.stdout(`executed crash command by ${this?.commanduser?.id} - ${this?.commanduser?.username}`);
+            log.stdout(`executed crash command by ${this?.commanduser?.id} - ${this?.commanduser?.username}`);
             process.exit(1);
         }, 1000);
     }
@@ -205,7 +206,7 @@ export class Debug extends Command {
     }
     async setParamsMsg() {
         if (!this.input.args[0]) {
-            await helper.tools.commands.sendMessage({
+            await commandTools.sendMessage({
                 type: this.input.type,
                 message: this.input.message,
                 interaction: this.input.interaction,
@@ -657,7 +658,7 @@ export class LeaveGuild extends Command {
         let allowed = false;
         let success = false;
         // do stuff
-        if (helper.tools.checks.isOwner(this.commanduser.id)) {
+        if (checks.isOwner(this.commanduser.id)) {
             allowed = true;
             const guild = helper.vars.client.guilds.cache.get(this.params.guildId);
             if (guild) {
@@ -665,7 +666,7 @@ export class LeaveGuild extends Command {
                 guild.leave();
             }
         }
-        if (helper.tools.checks.isAdmin(this.commanduser.id, this.params.guildId) && !success) {
+        if (checks.isAdmin(this.commanduser.id, this.params.guildId) && !success) {
             allowed = true;
             const guild = helper.vars.client.guilds.cache.get(this.params.guildId);
             if (guild) {
@@ -703,7 +704,7 @@ export class Prefix extends Command {
         await this.setParams();
         this.logInput();
         // do stuff
-        if (typeof this.params.newPrefix != 'string' || this.params.newPrefix.length < 1 || !(helper.tools.checks.isAdmin(this.commanduser.id, this.input.message?.guildId,) || helper.tools.checks.isOwner(this.commanduser.id))) {
+        if (typeof this.params.newPrefix != 'string' || this.params.newPrefix.length < 1 || !(checks.isAdmin(this.commanduser.id, this.input.message?.guildId,) || checks.isOwner(this.commanduser.id))) {
             this.ctn.content = `The current prefix is \`${helper.vars.config.prefix}\``;
         } else {
             helper.vars.config.prefix = this.params.newPrefix;

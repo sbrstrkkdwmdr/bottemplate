@@ -1,6 +1,6 @@
 // initialise client commands
 import * as Discord from 'discord.js';
-import * as helper from './helper.js';
+import * as helper from './helper';
 
 export async function main() {
     const docommands: boolean = true;

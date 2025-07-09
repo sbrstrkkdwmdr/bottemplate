@@ -2,15 +2,17 @@ console.log('Loading...');
 const initdate = new Date();
 import { Client, GatewayIntentBits, Partials } from 'discord.js';
 import fs from 'fs';
+import * as log from './tools/log';
 
-import * as buttonHandler from './buttonHandler.js';
-import * as commandHandler from './commandHandler.js';
-import * as helper from './helper.js';
-import * as linkHandler from './linkHandler.js';
-import { loops } from './loops.js';
-import * as slashcmds from './slashCommands.js';
-import * as tooltypes from './types/tools.js';
+import * as helper from './helper';
+import { loops } from './loops';
+import * as slashcmds from './slashCommands';
 
+import { ButtonHandler } from './buttonHandler';
+import { CommandHandler } from './commandHandler';
+import { LinkHandler } from './linkHandler';
+
+console.log('Initialising client...');
 const client = new Client({
     intents: [
         GatewayIntentBits.DirectMessages,
@@ -41,7 +43,7 @@ helper.vars.client = client;
 client.once('ready', () => {
     const currentDate = new Date();
     const timetostart = currentDate.getTime() - initdate.getTime();
-    console.log(`
+    log.stdout(`
 ====================================================
 BOT IS NOW ONLINE
 ----------------------------------------------------
@@ -55,7 +57,7 @@ Client ID:        ${client.user.id}
 `);
 
     if (!fs.existsSync(`${helper.vars.path.precomp}/config/osuauth.json`)) {
-        helper.tools.log.stdout(`Creating ${helper.vars.path.precomp}/config/osuauth.json`);
+        log.stdout(`Creating ${helper.vars.path.precomp}/config/osuauth.json`);
         fs.writeFileSync(`${helper.vars.path.precomp}/config/osuauth.json`,
             '{"token_type": "Bearer", "expires_in": 1, "access_token": "blahblahblah"}', 'utf-8');
     }
@@ -103,9 +105,10 @@ Client ID:        ${client.user.id}
         }
     });
     client.on('messageCreate', async (message) => {
-        commandHandler.onMessage(message);
-        linkHandler.onMessage(message); //{}
-
+        const ch = new CommandHandler();
+        const lh = new LinkHandler();
+        ch.onMessage(message);
+        lh.onMessage(message);
         //if message mentions bot and no other args given, return prefix
         if (message.mentions.users.size > 0) {
             if (message.mentions.users.first().id == helper.vars.client.user.id && message.content.replaceAll(' ', '').length == (`<@${helper.vars.client.user.id}>`).length) {
@@ -124,8 +127,10 @@ Client ID:        ${client.user.id}
         }
     });
     client.on('interactionCreate', async (interaction) => {
-        await commandHandler.onInteraction(interaction);
-        await buttonHandler.onInteraction(interaction);
+        const ch = new CommandHandler();
+        const bh = new ButtonHandler();
+        ch.onInteraction(interaction);
+        bh.onInteraction(interaction);
     });
     loops();
     slashcmds.main();
@@ -134,6 +139,6 @@ Client ID:        ${client.user.id}
 client.login(helper.vars.config.token);
 
 process.on('warning', e => {
-    helper.tools.log.stdout(e.stack);
+    log.stdout(e.stack);
     console.warn(e.stack);
 });

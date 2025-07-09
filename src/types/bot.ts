@@ -1,5 +1,5 @@
 import Discord from 'discord.js';
-
+import * as tooltypes from './tools';
 export type commandInfo = {
     name: string,
     description: string,
@@ -47,7 +47,7 @@ export type commandInput = {
     buttonType?: buttonType;
 };
 
-export type overrides = {
+export type overrides = tooltypes.Dict & {
     ex?: string | number;
     commandAs?: "message" | "interaction" | "link" | "button",
 };
