@@ -26,6 +26,11 @@ export class Command {
     }
     protected get name() { return this.#name; }
     protected commanduser: Discord.User | Discord.APIUser;
+    /**
+     * object for storing message content, embeds, etc.
+     * 
+     * use `this.send` to send messages
+     */
     protected ctn: {
         content?: string,
         embeds?: (Discord.EmbedBuilder | Discord.Embed)[],
@@ -36,16 +41,32 @@ export class Command {
         edit?: boolean,
         editAsMsg?: boolean,
     };
+    /**
+     * user-defined parameters
+     * (page = 2 etc.)
+     * 
+     * make sure to set the default values in the constructor
+     */
     protected params: helper.tooltypes.Dict;
+
+    /**
+     * stores event message/interaction object, overrides, command ID etc. 
+     */
     protected input: helper.bottypes.commandInput;
 
     constructor() {
         this.voidcontent();
     }
+    /**
+     * sets input and arg parser
+     */
     setInput(input: helper.bottypes.commandInput) {
         this.input = input;
         this.argParser = new ArgsParser(this.input.args);
     }
+    /**
+     * empties all values in `this.ctn`
+     */
     voidcontent() {
         this.ctn = {
             content: undefined,
@@ -58,6 +79,11 @@ export class Command {
             editAsMsg: undefined,
         };
     }
+    /**
+     * uses the appropriate params setter methods (setParamsMsg for message events, setParamsInteract for interactions)
+     * 
+     * to actually parse user input, modify the setParams{type} methods
+     */
     async setParams() {
         switch (this.input.type) {
             case 'message':
@@ -78,10 +104,23 @@ export class Command {
                 break;
         }
     }
+    /**
+     * parse user input from messages
+     * 
+     * see `setParam`
+     */
     async setParamsMsg() {
     }
     /**
      * for message params only
+     * 
+     * @param defaultValue - what to return if no flags are found
+     * @param flags - what flags to search for for this parameter
+     * @param type - string, number, boolean
+     * @param typeParams - type-specific settings
+     * @param typeParams.bool_setValue - what to set the param to (bool only)
+     * @param typeParams.number_isInt - is this param an integer value (number only)
+     * @param typeParams.string_isMultiple - paramater can be multiple words enclosed by double-quotes (string only)
      * 
      * ```
      * this.input.args = ['-p', '55.3',]
@@ -121,6 +160,35 @@ export class Command {
         }
         return defaultValue;
     };
+    /**
+     * 
+     * @param defaultValue - what to return if no args are found
+     * @param args - list of flags and values
+     * @param args.set - set the param to this value 
+     * @param args.flags - what flags to search for 
+     * 
+     * example: 
+     * ```
+     * // return 'osu' if no args found
+     * // return 'taiko' if '-t' or '-taiko' are found
+     * // etc...
+     * this.params.mode = this.setParamBoolList('osu',
+     *      { set: 'osu', flags: ['-o', '-osu', '-std'] },
+     *      { set: 'taiko', flags: ['-t', '-taiko'] },
+     *      { set: 'fruits', flags: ['-f', '-fruits', '-ctb', '-catch'] },
+     *      { set: 'mania', flags: ['-m', '-mania'] }
+     *  );
+     * ```
+     */
+    protected setParamBoolList(defaultValue: any, ...args: { set: any, flags: string[]; }[]) {
+        for (const arg of args) {
+            const temp = this.setParam(false, arg.flags, 'bool', { bool_setValue: arg.set });
+            if (temp) {
+                return temp;
+            }
+        }
+        return defaultValue;
+    }
     private setParamCheckFlags(flags: string[]) {
         if (flags.length == 0) return [];
         const nf: string[] = [];
@@ -136,12 +204,22 @@ export class Command {
     protected setParamPage() {
         this.params.page = this.setParam(this.params.page, helper.argflags.pages, 'number', { number_isInt: true });
     }
+    /**
+     * set interaction parameters
+     * 
+     * ```
+     * this.params.page = interaction.options.getInteger("page");
+     * ```
+     */
     async setParamsInteract() {
     }
     async setParamsBtn() {
     }
     async setParamsLink() {
     }
+    /**
+     * logs command name, ID, time, params, etc.
+     */
     logInput(skipKeys: boolean = false) {
         let keys = [];
         if (!skipKeys) {
@@ -162,6 +240,15 @@ export class Command {
             this.input.interaction,
         );
     }
+    /**
+     * check for override params and set them accordingly
+     * 
+     * ```
+     * // check for page override and set it if it exists
+     * this.setParamOverride('page'); 
+     * 
+     * ```
+     */
     getOverrides() { }
     /**
      * this.params[pKey] = this.input.overrides[oKey]
@@ -187,6 +274,9 @@ export class Command {
         this.ctn.content = 'No execution method has been set';
         this.send();
     }
+    /**
+     * sends `this.ctn`
+     */
     async send() {
         await commandTools.sendMessage({
             type: this.input.type,
@@ -206,6 +296,13 @@ export class ArgsParser {
     }
     /**
      * assisted by ChatGPT
+     * 
+     * get the value of params matching given flags
+     * 
+     * ```
+     * this.args = ['-p', '5'];
+     * getParam(['-p','-page']); // => '5'
+     * ```
      */
     getParam(flags: string[]) {
         for (let i = 0; i < this.args.length; i++) {
@@ -245,6 +342,14 @@ export class ArgsParser {
 
         return null;
     }
+    /**
+     * get the value of params matching given flags
+     * 
+     * ```
+     * this.args = ['-parse', '5', 'woaw'];
+     * getParamBool(['-parse','-p']); // => true
+     * ```
+     */
     getParamBool(flags: string[]) {
         for (let i = 0; i < this.args.length; i++) {
             if (flags.includes(this.args[i])) {
@@ -254,6 +359,16 @@ export class ArgsParser {
         }
         return false;
     }
+    /**
+     * check if a param exists in args
+     * 
+     * unlike `getParamBool()`, this doesn't update `this.used`
+     * 
+     * ```
+     * this.args = ['-parse', '5', 'woaw'];
+     * getParamBool(['-parse','-p']); // => true
+     * ```
+     */
     paramExists(flags: string[]) {
         for (let i = 0; i < this.args.length; i++) {
             if (flags.includes(this.args[i])) {
@@ -283,7 +398,7 @@ export class ArgsParser {
      * input.args = ['osu.ppy.sh/u/34'];
      * getParamFlexible(['-u', 'osu.ppy.sh/u/{param}']); // 34
      * 
-     *      * input.args = ['osu.ppy.sh/users/15222484/mania'];
+     * input.args = ['osu.ppy.sh/users/15222484/mania'];
      * getParamFlexible(['-u', 'osu.ppy.sh/users/{param}/*']); // 15222484
      * ```
      */
@@ -337,6 +452,23 @@ export class ArgsParser {
 
     /**
      * assisted by ChatGPT
+     * 
+     * parses link-patterns
+     * 
+     * return object depends on the pattern given
+     * 
+     * example:
+     * 
+     * ```
+     * const args = ['osu.ppy.sh/beatmapsets/12#osu/52']
+     * getLink('osu.ppy.sh/beatmapsets/{set}#{mode}/{map}');
+     * // => 
+     * // {
+     * // set: '12',
+     * // mode: 'osu',
+     * // map: '52',
+     * // }
+     * ```
      */
     getLink(pattern: string): helper.tooltypes.Dict | null {
         const paramNames: string[] = [];

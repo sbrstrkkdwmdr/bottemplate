@@ -119,52 +119,35 @@ class Test extends Command {
 ```
 
 -   to implement message params, modify the `setParamsMsg()` method
--   for params that use flags, you can use this template code:
+-   params that use flags can use the `setParam()` method
+-   for params that use flags, you can follow this template code:
 
 ```ts
 // note -
 // in `!rs -p 2 -d` the args would be ['-p' '2' '-d']
 
+// commands that use pages can use this built-in method
+this.setParamPage();
+
 // strings and numbers
 // "-page 2" -> page = 2
-if (this.input.args.includes("-page")) {
-    // built-in flag parser
-    const temp = helper.tools.commands.parseArg(
-        this.input.args,
-        "-page",
-        "number",
-        this.params.ar
-    );
-    this.params.page = temp.value;
-    this.input.args = temp.newArgs;
-}
+// if page isnt found, return 1
+this.params.page = this.setParam(1, ["-page", "-p"], "number", {
+    number_isInt: true,
+});
 
 // booleans
 // "-test" -> test = true
-if (this.input.args.includes("-test")) {
-    this.params.test = true;
-}
+// in this example, if "-test", is not found, then return false
+// if "-test" is found, return true
+this.params.test = this.setParam(false, ["-test"], "bool", {});
 
 // "-alt" -> mode = alt
-if (this.input.args.includes("-alt")) {
-    this.params.mode = "alternate";
-}
-
-// args with aliases
-// "-p 4" -> page = 4
-// "-page 4" -> page = 4
-const pageArgFinder = helper.tools.commands.matchArgMultiple(
-    ["-p", "-page"],
-    this.input.args,
-    true,
-    "number",
-    false,
-    true
-);
-if (pageArgFinder.found) {
-    this.params.page = pageArgFinder.output;
-    this.input.args = pageArgFinder.args;
-}
+// if "-alt" or "-other" is found, set mode to "alternate"
+// else, return current mode
+this.params.mode = this.setParam(this.params.mode, ["-alt", "-other"], "bool", {
+    bool_setValue: "alternate",
+});
 ```
 
 -   to implement interaction params, modify the `setParamsInteract()` method
@@ -220,10 +203,11 @@ helper.tools.commands.storeButtonArgs(this.input.id, {
 
 ```ts
     getOverrides(): void {
-        if (!this.input.overrides) return; // do nothing if no override values are set
-        if (this.input.overrides?.page != null) {
-            this.params.page = this.input.overrides.page;
-        }
+        // do nothing if no override values are set
+        if (!this.input.overrides) return; 
+        
+        // checks if overrides.page is set, then sets params.page
+        this.setParamOverride('page'); 
     }
 ```
 
