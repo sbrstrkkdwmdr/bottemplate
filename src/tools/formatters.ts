@@ -62,7 +62,7 @@ export function argRange(arg: string, forceAboveZero: boolean) {
  * @returns string with the first letter capitalised
  */
 export function toCapital(str: string) {
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+    return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 export function dateToDiscordFormat(date: Date, type?: 'R' | 'F') {
