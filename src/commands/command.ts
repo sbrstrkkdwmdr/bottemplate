@@ -285,6 +285,31 @@ export class Command {
             args: this.ctn,
         }, this.input.canReply);
     }
+    /**
+     * for interactions that take a while to reply, use this method at the start of execute() to prevent timeout errors
+     * 
+     * example:
+     * ```
+     * async execute() {
+     *     this.sendLoading();
+     *     const jsonData = await fetch('https://some.website.com/get?query=query').then(res => res.json());
+     *     setTimeout(() => {
+     *         const embed = this.createEmbed(jsonData);
+     *         this.ctn.embeds = [embed];
+     *         this.send();
+     *     }, 5000);
+     * }
+     * ```
+     * 
+     */
+    sendLoadingMessage() {
+        if (this.input.type == 'interaction') {
+            this.ctn.content = 'Loading...';
+            this.send();
+            this.voidcontent();
+            this.ctn.edit = true;
+        }
+    }
 }
 
 export class ArgsParser {

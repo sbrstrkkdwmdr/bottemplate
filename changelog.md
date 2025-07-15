@@ -10,6 +10,7 @@
 
 - added `ArgParser` class
 - added various `setParam` methods
+- added `sendLoadingMessage()` method
 
 ### Command Handlers
 

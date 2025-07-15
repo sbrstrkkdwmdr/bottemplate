@@ -123,31 +123,35 @@ class Test extends Command {
 -   for params that use flags, you can follow this template code:
 
 ```ts
-// note -
-// in `!rs -p 2 -d` the args would be ['-p' '2' '-d']
+// extends Command
 
-// commands that use pages can use this built-in method
-this.setParamPage();
+async setParamsMsg() {
+    // note -
+    // in `!rs -p 2 -d` the args would be ['-p' '2' '-d']
 
-// strings and numbers
-// "-page 2" -> page = 2
-// if page isnt found, return 1
-this.params.page = this.setParam(1, ["-page", "-p"], "number", {
-    number_isInt: true,
-});
+    // commands that use pages can use this built-in method
+    this.setParamPage();
 
-// booleans
-// "-test" -> test = true
-// in this example, if "-test", is not found, then return false
-// if "-test" is found, return true
-this.params.test = this.setParam(false, ["-test"], "bool", {});
+    // strings and numbers
+    // "-page 2" -> page = 2
+    // if page isnt found, return 1
+    this.params.page = this.setParam(1, ["-page", "-p"], "number", {
+        number_isInt: true,
+    });
 
-// "-alt" -> mode = alt
-// if "-alt" or "-other" is found, set mode to "alternate"
-// else, return current mode
-this.params.mode = this.setParam(this.params.mode, ["-alt", "-other"], "bool", {
-    bool_setValue: "alternate",
-});
+    // booleans
+    // "-test" -> test = true
+    // in this example, if "-test", is not found, then return false
+    // if "-test" is found, return true
+    this.params.test = this.setParam(false, ["-test"], "bool", {});
+
+    // "-alt" -> mode = alt
+    // if "-alt" or "-other" is found, set mode to "alternate"
+    // else, return current mode
+    this.params.mode = this.setParam(this.params.mode, ["-alt", "-other"], "bool", {
+        bool_setValue: "alternate",
+    });
+}
 ```
 
 -   to implement interaction params, modify the `setParamsInteract()` method
@@ -168,65 +172,76 @@ helper.tools.commands.buttonPage(page, maxPage, this.input.buttonType);
 -   using param files:
 
 ```ts
-// for button args that are stored in cache
-const temp = helper.tools.commands.getButtonArgs(this.input.id);
-if (temp.error) {
-    interaction.followUp({
-        content: helper.vars.errors.paramFileMissing,
-        flags: Discord.MessageFlags.Ephemeral,
-        allowedMentions: { repliedUser: false },
-    });
-    helper.tools.commands.disableAllButtons(this.input.message);
-    return;
+// extends Command
+async setParamsButton(){
+    // for button args that are stored in cache
+    const temp = helper.tools.commands.getButtonArgs(this.input.id);
+    if (temp.error) {
+        interaction.followUp({
+            content: helper.vars.errors.paramFileMissing,
+            flags: Discord.MessageFlags.Ephemeral,
+            allowedMentions: { repliedUser: false },
+        });
+        helper.tools.commands.disableAllButtons(this.input.message);
+        return;
+    }
+    this.params.page = temp.page;
 }
-this.params.page = temp.page;
 ```
 
 -   to create param files
 
 ```ts
-// from https://github.com/sbrstrkkdwmdr/ssob/blob/2ad48ebba57fce74ead27948f1b4f87b26be8773/src/commands/osu_scores.ts#L1436
-helper.tools.commands.storeButtonArgs(this.input.id, {
-    user: this.params.user,
-    searchid: this.params.searchid,
-    page: this.params.page + 1,
-    maxPage: this.scores.length,
-    mode: this.params.mode,
-    fails: this.params.showFails,
-    filterTitle: this.params.filter,
-});
+// extends Command
+async execute(){
+    // insert code here
+
+    // from https://github.com/sbrstrkkdwmdr/ssob/blob/2ad48ebba57fce74ead27948f1b4f87b26be8773/src/commands/osu_scores.ts#L1436
+    helper.tools.commands.storeButtonArgs(this.input.id, {
+        user: this.params.user,
+        searchid: this.params.searchid,
+        page: this.params.page + 1,
+        maxPage: this.scores.length,
+        mode: this.params.mode,
+        fails: this.params.showFails,
+        filterTitle: this.params.filter,
+    });
+}
 ```
 
--   each setParams method is called via `this.setParams()` when needed, so you can just call that method instead of each individual method
+-   each setParams method is called via `Command.setParams()` when needed, so you can just call that method instead of each individual method
 -   to retrieve override params, modify the `getOverrides()` method
 -   override params are used for some commands that don't directly send the interaction to the original command message (eg. page selectors)
 
 ```ts
-    getOverrides(): void {
-        // do nothing if no override values are set
-        if (!this.input.overrides) return; 
-        
-        // checks if overrides.page is set, then sets params.page
-        this.setParamOverride('page'); 
-    }
+// extends Command
+getOverrides(): void {
+    // do nothing if no override values are set
+    if (!this.input.overrides) return;
+
+    // checks if overrides.page is set, then sets params.page
+    this.setParamOverride('page');
+}
 ```
 
--   overrides are stored in `this.input.overrides`
+-   overrides are stored in `Command.input.overrides`
 -   getOverrides isn't stored in setParams, so it make sure to add it to the execute method if needed
--   if you wish to log each command used, make sure to call `this.logInput()` after `this.setParams()`
+-   if you wish to log each command used, make sure to call `Command.logInput()` after `Command.setParams()`
 
--   if the command is meant to output a message, make sure to set the content via `this.ctn`, and call `this.send()` afterwards
+-   if the command is meant to output a message, make sure to set the content via `Command.ctn`, and call `Command.send()` afterwards
 
 ```ts
+// extends Command
 async execute(){
     this.ctn.content = "Hello, world!";
     this.send();
 }
 ```
 
--   if the command uses `this.send()` multiple times you can clear `this.ctn` with `this.voidcontent()`
+-   if the command uses `Command.send()` multiple times you can clear `Command.ctn` with `Command.voidcontent()`
 
 ```ts
+// extends Command
 async execute(){
     this.ctn.content = "Hello, world!";
     this.send();
@@ -239,19 +254,41 @@ async execute(){
 }
 ```
 
--   interaction commands only allow one reply at a time, so make sure to avoid sending multiple replies if possible. If multiple are needed, you can always set `this.ctn.edit` to true after the first reply or use `interaction.channel.send()`
--   interaction commands also time out after a few seconds, so if the command takes a while to load, you can send a reply with a loading message, then at the end update it with `this.ctn.edit` set to true
+-   interaction commands only allow one reply at a time, so make sure to avoid sending multiple replies if possible. If multiple are needed, you can always set `Command.ctn.edit` to true after the first reply or use `interaction.channel.send()`
+-   interaction commands also time out after a few seconds, so if the command takes a while to load, you can send a reply with a loading message, then at the end update it with `Command.ctn.edit` set to true
 
 -   optionally, you can also let your command be accessible in the help command. To do this, add it to `cmds[]` in `src/vars/commandData.ts`
+
+-   some commands can take a while to respond because they're fetching third-party APIs and whatnot
+-   because of this, discord can sometimes time-out the interaction before the command is able to respond
+-   to avoid this, use `Command.sendLoadingMessage()` in `/` commands
+
+```ts
+// extends Command
+async execute() {
+    this.sendLoading();
+    const jsonData = await fetch('https://some.website.com/get?query=query').then(res => res.json());
+    setTimeout(() => {
+        const embed = this.createEmbed(jsonData);
+        this.ctn.embeds = [embed];
+        this.send();
+    }, 5000);
+}
+```
 
 ### 2. adding command to the command handlers
 
 -   in `src/commandHandler` add the command name and it's aliases to the switch statement `commandSelect()` like so:
 
 ```ts
-case 'test':
-    command = new helper.commands.command.Test();
-    break;
+    commandSelect(cmd: string, args: string[]) {
+        switch (cmd) {
+            case 'test':
+                command = new helper.commands.command.Test();
+                break;
+        }
+        return args;
+    }
 ```
 
 -   if the command uses embeds, or has other requirements, you can add its name to the arrays in commandCheck

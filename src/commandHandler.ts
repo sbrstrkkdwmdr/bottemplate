@@ -5,30 +5,6 @@ import * as helper from './helper';
 import * as checks from './tools/checks';
 import * as commandTools from './tools/commands';
 
-
-const rslist = [
-    'recent', 'recentscore', 'rs', 'r',
-    'recenttaiko', 'rt',
-    'recentfruits', 'rf', 'rctb',
-    'recentmania', 'rm',
-    'rslist', 'recentlist', 'rl',
-    'recentlisttaiko', 'rlt',
-    'recentlistfruits', 'rlf', 'rlctb', 'rlc',
-    'recentlistmania', 'rlm',
-    'rb', 'recentbest', 'rsbest',
-];
-const scorelist = [
-    'firsts', 'firstplaceranks', 'fpr', 'fp', '#1s', 'first', '#1', '1s',
-    'leaderboard', 'maplb', 'mapleaderboard', 'ml',
-    'nochokes', 'nc',
-    'osutop', 'top', 't', 'ot', 'topo', 'toposu',
-    'taikotop', 'toptaiko', 'tt', 'topt',
-    'ctbtop', 'fruitstop', 'catchtop', 'topctb', 'topfruits', 'topcatch', 'tf', 'tctb', 'topf', 'topc',
-    'maniatop', 'topmania', 'tm', 'topm',
-    'scores', 'c',
-    'pinned', 'pins'
-].concat(rslist).sort((a, b) => b.length - a.length);
-
 function startType(object: Discord.Message | Discord.Interaction) {
     try {
         (object.channel as Discord.GuildTextBasedChannel).sendTyping();
@@ -174,29 +150,6 @@ export class CommandHandler extends InputHandler {
     }
 
     commandSelect(cmd: string, args: string[]) {
-        let tnum: string;
-        if (scorelist.some(x => cmd.startsWith(x)) && !scorelist.some(x => cmd == x)) {
-            let cont: boolean = true;
-            scorelist.some(x => {
-                if (cmd.startsWith(x) && cont) {
-                    tnum = cmd.replace(x, '');
-                    if (!isNaN(+tnum)) {
-                        cmd = x;
-                        cont = false;
-                    }
-                }
-                return null;
-            });
-        }
-        if (!isNaN(+tnum)) {
-            if (rslist.includes(cmd)) args.push('-p', tnum);
-            else args.push('-parse', tnum);
-        }
-        if (['uptime', 'server', 'website', 'timezone', 'version', 'v', 'dependencies', 'deps', 'source'].some(x => x.toLowerCase() == cmd.toLowerCase())) {
-            args = [cmd];
-            cmd = 'info';
-        }
-
         switch (cmd) {
             // gen
             case 'list':
