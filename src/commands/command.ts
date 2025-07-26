@@ -277,7 +277,7 @@ export class Command {
     /**
      * sends `this.ctn`
      */
-    async send() {
+    protected async send() {
         await commandTools.sendMessage({
             type: this.input.type,
             message: this.input.message,
@@ -302,13 +302,51 @@ export class Command {
      * ```
      * 
      */
-    sendLoadingMessage() {
+    protected sendLoadingMessage() {
         if (this.input.type == 'interaction') {
             this.ctn.content = 'Loading...';
             this.send();
             this.voidcontent();
             this.ctn.edit = true;
         }
+    }
+    /**
+     * send an error message to the channel, then throw an error
+     */
+    protected async sendError(err: string) {
+        this.voidcontent();
+        this.ctn.content = err;
+        await this.send();
+        throw new Error(err);
+    }
+    protected disableButtons(builder: Discord.ActionRowBuilder<Discord.ButtonBuilder>) {
+        for (const component of builder.components) {
+            component.setDisabled(true);
+        }
+    }
+    /**
+     * assuming page buttons are formatted as
+     * [start][prev][select][next][end]
+     */
+    protected disablePageButtons_check(builder: Discord.ActionRowBuilder<Discord.ButtonBuilder>, allCondition: boolean, startCondition: boolean, endCondition: boolean) {
+        if (allCondition || (startCondition && endCondition)) {
+            this.disableButtons(builder);
+        } else {
+            if (startCondition) {
+                this.disablePageButtons_start(builder);
+            }
+            if (endCondition) {
+                this.disablePageButtons_end(builder);
+            }
+        }
+    }
+    protected disablePageButtons_start(builder: Discord.ActionRowBuilder<Discord.ButtonBuilder>) {
+        builder.components[0].setDisabled(true);
+        builder.components[1].setDisabled(true);
+    }
+    protected disablePageButtons_end(builder: Discord.ActionRowBuilder<Discord.ButtonBuilder>) {
+        builder.components[3].setDisabled(true);
+        builder.components[4].setDisabled(true);
     }
 }
 

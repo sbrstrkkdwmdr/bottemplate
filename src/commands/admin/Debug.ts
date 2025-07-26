@@ -1,196 +1,18 @@
 import Discord from 'discord.js';
 import * as fs from 'fs';
-import * as helper from '../helper';
-import * as checks from '../tools/checks';
-import * as commandTools from '../tools/commands';
-import * as log from '../tools/log';
-import { Command } from './command';
+import * as helper from '../../helper';
+import * as commandTools from '../../tools/commands';
+import { Command } from '../command';
 
-export class CheckPerms extends Command {
-    declare protected params: {
-        searchUser: Discord.User | Discord.APIUser;
-    };
-    constructor() {
-        super();
-        this.name = 'CheckPerms';
-        this.params = {
-            searchUser: null,
-        };
-    }
-    async setParamsMsg() {
-
-        if (this.input.args[0]) {
-            if (this.input.message.mentions.users.size > 0) {
-                this.params.searchUser = this.input.message.mentions.users.first();
-            } else {
-                this.params.searchUser = helper.vars.client.users.cache.get(this.input.args.join(' '));
-            }
-        } else {
-            this.params.searchUser = this.commanduser;
-        }
-
-    }
-    async setParamsInteract() {
-        const interaction = this.input.interaction as Discord.ChatInputCommandInteraction;
-    }
-    async execute() {
-        await this.setParams();
-        this.logInput();
-        // do stuff
-        if (this.params.searchUser == null || typeof this.params.searchUser == 'undefined') {
-            this.params.searchUser = this.commanduser;
-        }
-
-        if (!(checks.isAdmin(this.commanduser.id, this.input.message?.guildId) || checks.isOwner(this.commanduser.id))) {
-            this.params.searchUser = this.commanduser;
-        }
-        const embed = new Discord.EmbedBuilder();
-        try {
-            const userAsMember = this.input.message.guild.members.cache.get(this.params.searchUser.id);
-            //get perms
-            const perms = userAsMember.permissions.toArray().join(' **|** ');
-
-            embed
-                .setTitle(`${this.params.searchUser.username}'s Permissions`)
-                .setDescription(`**${perms}**`)
-                .setColor(helper.colours.embedColour.admin.dec);
-
-        } catch (err) {
-            embed.setTitle('Error')
-                .setDescription('An error occured while trying to get the permissions of the user.')
-                .setColor(helper.colours.embedColour.admin.dec);
-
-        }
-
-        this.ctn.embeds = [embed];
-        this.send();
-    }
-}
-
-export class Clear extends Command {
-    declare protected params: {
-        type: string;
-    };
-    constructor() {
-        super();
-        this.name = 'Clear';
-        this.params = {
-            type: ''
-        };
-    }
-    async setParamsMsg() {
-        this.params.type = this.input?.args[0];
-    }
-    async execute() {
-        await this.setParams();
-        this.logInput();
-        // do stuff
-        let embed = new Discord.EmbedBuilder()
-            .setTitle('Clearing cache');
-
-        embed = this.clearCache(this.params.type, embed);
-        this.ctn.embeds = [embed];
-        this.send();
-    }
-    clearCache(type: string, embed: Discord.EmbedBuilder) {
-        switch (type) {
-            case 'normal': default: { //clears all temprary files (cache/commandData)
-                log.stdout(`manually clearing temporary files in ${helper.vars.path.cache}/commandData/`);
-                const curpath = `${helper.vars.path.cache}/commandData`;
-                const files = fs.readdirSync(curpath);
-                for (const file of files) {
-                    const keep = ['Approved', 'Ranked', 'Loved', 'Qualified'];
-                    if (!keep.some(x => file.includes(x))) {
-                        fs.unlinkSync(`${curpath}/` + file);
-                        log.stdout(`Deleted file: ${curpath}/` + file);
-                    }
-                }
-                embed.setDescription(`Clearing temporary files in ./cache/commandData/\n(ranked/loved/approved maps are kept)`);
-            }
-                break;
-            case 'all': { //clears all files in commandData
-                log.stdout(`manually clearing all files in ${helper.vars.path.cache}/commandData/`);
-                const curpath = `${helper.vars.path.cache}/commandData`;
-                const files = fs.readdirSync(curpath);
-                for (const file of files) {
-                    fs.unlinkSync(`${curpath}/` + file);
-                    log.stdout(`Deleted file: ${curpath}/` + file);
-                }
-                embed.setDescription(`Clearing all files in ./cache/commandData/`);
-            }
-                break;
-            case 'trueall': { //clears everything in cache
-                embed = this.clearCache('all', embed);
-                embed = this.clearCache('errors', embed);
-                embed = this.clearCache('params', embed);
-                embed.setDescription(`Clearing all files in ./cache/ and ./files/maps`);
-            }
-                break;
-            case 'errors': { //clears all errors
-                log.stdout(`manually clearing all err files in ${helper.vars.path.cache}/errors/`);
-                const curpath = `${helper.vars.path.cache}/errors`;
-                const files = fs.readdirSync(curpath);
-                for (const file of files) {
-                    fs.unlinkSync(`${curpath}/` + file);
-                    log.stdout(`Deleted file: ${curpath}/` + file);
-                }
-                embed.setDescription(`Clearing error files in ./cache/errors/`);
-            }
-                break;
-            case 'params': {
-                log.stdout(`manually clearing all param files in ${helper.vars.path.cache}/params/`);
-                const curpath = `${helper.vars.path.cache}/params`;
-                const files = fs.readdirSync(curpath);
-                for (const file of files) {
-                    fs.unlinkSync(`${curpath}/` + file);
-                    log.stdout(`Deleted file: ${curpath}/` + file);
-                }
-                embed.setDescription(`Clearing param files in ./cache/params/`);
-            }
-            case 'help': {
-                embed.setDescription(
-                    [
-                        ['help', 'show this list'],
-                        ['normal', 'clears all temporary files (maps with leaderboard are kept)'],
-                        ['all', 'clears all files in command cache'],
-                        ['errors', 'clear cached errors'],
-                        ['params', 'clear command params (such as sorting order, filters etc.)'],
-                    ].map(x => `**${x[0]}**: ${x[1]}`).join('\n') + '\n'
-                    + '* previous files store the data of the last object used in that given server/guild'
-                );
-            }
-                break;
-        }
-        return embed;
-    }
-}
-
-export class Crash extends Command {
-    declare protected params: {};
-    constructor() {
-        super();
-        this.name = 'Crash';
-    }
-    async execute() {
-        await this.setParams();
-        this.logInput(true);
-        // do stuff
-        this.ctn.content = 'executing crash command...';
-        this.send();
-        setTimeout(() => {
-            log.stdout(`executed crash command by ${this?.commanduser?.id} - ${this?.commanduser?.username}`);
-            process.exit(1);
-        }, 1000);
-    }
-}
 type debugtype =
     'commandfile' | 'commandfiletype' |
-    'servers' | 'channels' | 'users' | 'maps' |
-    'forcetrack' | 'curcmdid' |
+    'servers' | 'channels' | 'users' |
+    'curcmdid' |
     'logs' | 'ls' |
     'clear' |
     'ip' | 'tcp' | 'location' |
     'memory';
+
 export class Debug extends Command {
     declare protected params: {
         type: debugtype;
@@ -414,12 +236,12 @@ export class Debug extends Command {
                 {
                     const servers = ((helper.vars.client.guilds.cache.map((guild) => {
                         return `
-----------------------------------------------------
-Name:     ${guild.name}
-ID:       ${guild.id}
-Owner ID: ${guild.ownerId}
-----------------------------------------------------
-`;
+    ----------------------------------------------------
+    Name:     ${guild.name}
+    ID:       ${guild.id}
+    Owner ID: ${guild.ownerId}
+    ----------------------------------------------------
+    `;
                     }
                     )))
                         .join('\n');
@@ -446,15 +268,15 @@ Owner ID: ${guild.ownerId}
                 } else {
                     const channels = curServer.channels.cache.map(channel =>
                         `
-    ----------------------------------------------------
-    Name:      ${channel.name}
-    ID:        ${channel.id}
-    Type:      ${channel.type}
-    Parent:    ${channel.parent}
-    Parent ID: ${channel.parentId}
-    Created:   ${channel.createdAt}
-    ----------------------------------------------------
-    `
+        ----------------------------------------------------
+        Name:      ${channel.name}
+        ID:        ${channel.id}
+        Type:      ${channel.type}
+        Parent:    ${channel.parent}
+        Parent ID: ${channel.parentId}
+        Created:   ${channel.createdAt}
+        ----------------------------------------------------
+        `
                     ).join('\n');
                     fs.writeFileSync(`${helper.vars.path.files}/channels${serverId}.txt`, channels, 'utf-8');
 
@@ -479,19 +301,19 @@ Owner ID: ${guild.ownerId}
                 } else {
                     const users = curServer.members.cache.map(member =>
                         `
-----------------------------------------------------
-Username:       ${member.user.username}
-ID:             ${member.id}
-Tag:            ${member.user.tag}
-Discriminator:  ${member.user.discriminator}
-Nickname:       ${member.displayName}
-AvatarURL:      ${member.avatarURL()}
-Created:        ${member.user.createdAt}
-Created(EPOCH): ${member.user.createdTimestamp}
-Joined:         ${member.joinedAt}
-Joined(EPOCH):  ${member.joinedTimestamp}
-----------------------------------------------------
-`
+    ----------------------------------------------------
+    Username:       ${member.user.username}
+    ID:             ${member.id}
+    Tag:            ${member.user.tag}
+    Discriminator:  ${member.user.discriminator}
+    Nickname:       ${member.displayName}
+    AvatarURL:      ${member.avatarURL()}
+    Created:        ${member.user.createdAt}
+    Created(EPOCH): ${member.user.createdTimestamp}
+    Joined:         ${member.joinedAt}
+    Joined(EPOCH):  ${member.joinedTimestamp}
+    ----------------------------------------------------
+    `
                     ).join('\n');
                     fs.writeFileSync(`${helper.vars.path.files}/users${serverId}.txt`, users, 'utf-8');
 
@@ -560,11 +382,11 @@ Joined(EPOCH):  ${member.joinedTimestamp}
                 const embed = new Discord.EmbedBuilder()
                     .setTitle('Current Memory Usage')
                     .setDescription(`
-RSS:        ${tomb(memdat.rss)} MiB
-Heap Total: ${tomb(memdat.heapTotal)} MiB
-Heap Used:  ${tomb(memdat.heapUsed)} MiB
-External:   ${tomb(memdat.external)} MiB
-`);
+    RSS:        ${tomb(memdat.rss)} MiB
+    Heap Total: ${tomb(memdat.heapTotal)} MiB
+    Heap Used:  ${tomb(memdat.heapUsed)} MiB
+    External:   ${tomb(memdat.external)} MiB
+    `);
                 this.ctn.embeds = [embed];
             }
                 break;
@@ -610,133 +432,5 @@ External:   ${tomb(memdat.external)} MiB
         return {
             name, value
         } as Discord.APIEmbedField;
-    }
-}
-
-export class Find extends Command {
-    declare protected params: {};
-    constructor() {
-        super();
-        this.name = 'Find';
-
-    }
-    async setParamsMsg() {
-    }
-    async setParamsInteract() {
-        const interaction = this.input.interaction as Discord.ChatInputCommandInteraction;
-    }
-
-    async execute() {
-        await this.setParams();
-        this.logInput(true);
-        // do stuff
-
-        this.send();
-    }
-}
-export class LeaveGuild extends Command {
-    declare protected params: {
-        guildId: string;
-    };
-    constructor() {
-        super();
-        this.name = 'LeaveGuild';
-        this.params = {
-            guildId: null
-        };
-    }
-    async setParamsMsg() {
-        this.params.guildId = this.input.args[0] ?? this.input.message?.guildId;
-    }
-    async setParamsInteract() {
-        const interaction = this.input.interaction as Discord.ChatInputCommandInteraction;
-    }
-
-    async execute() {
-        await this.setParams();
-        this.logInput();
-        let allowed = false;
-        let success = false;
-        // do stuff
-        if (checks.isOwner(this.commanduser.id)) {
-            allowed = true;
-            const guild = helper.vars.client.guilds.cache.get(this.params.guildId);
-            if (guild) {
-                success = true;
-                guild.leave();
-            }
-        }
-        if (checks.isAdmin(this.commanduser.id, this.params.guildId) && !success) {
-            allowed = true;
-            const guild = helper.vars.client.guilds.cache.get(this.params.guildId);
-            if (guild) {
-                success = true;
-                guild.leave();
-            }
-        }
-        this.ctn.content =
-            allowed ?
-                success ?
-                    `Successfully left guild \`${this.params.guildId}\`` :
-                    `Was unable to leave guild`
-                :
-                'You don\'t have permissions to use this command';
-        this.send();
-    }
-}
-
-export class Prefix extends Command {
-    declare protected params: {
-        newPrefix: string;
-    };
-    constructor() {
-        super();
-        this.name = 'Prefix';
-        this.params = {
-            newPrefix: null
-        };
-    }
-    async setParamsMsg() {
-        this.params.newPrefix = this.input.args.join(' ');
-    }
-
-    async execute() {
-        await this.setParams();
-        this.logInput();
-        // do stuff
-        if (typeof this.params.newPrefix != 'string' || this.params.newPrefix.length < 1 || !(checks.isAdmin(this.commanduser.id, this.input.message?.guildId,) || checks.isOwner(this.commanduser.id))) {
-            this.ctn.content = `The current prefix is \`${helper.vars.config.prefix}\``;
-        } else {
-            helper.vars.config.prefix = this.params.newPrefix;
-            this.ctn.content = `Prefix set to \`${this.params.newPrefix}\``;
-            const configpath = helper.vars.path.precomp + '/config/config.json'
-            fs.writeFileSync(configpath, JSON.stringify(helper.vars.config, null, 1));
-        }
-
-        this.send();
-    }
-}
-
-export class Servers extends Command {
-    declare protected params: {};
-    constructor() {
-        super();
-        this.name = 'Servers';
-    }
-    async execute() {
-        await this.setParams();
-        this.logInput(true);
-        // do stuff
-
-        const servers = (helper.vars.client.guilds.cache.map(guild => ` **${guild.name}** => \`${guild.id}\` | <@${guild.ownerId}> \n`)).join('');
-        const embed = new Discord.EmbedBuilder()
-            .setTitle(`This client is in ${helper.vars.client.guilds.cache.size} guilds`)
-            .setDescription(`${servers}`);
-        if (servers.length > 2000) {
-            fs.writeFileSync(`${helper.vars.path.main}/debug/guilds.txt`, servers, 'utf-8');
-            this.ctn.files = [`${helper.vars.path.main}/debug/guilds.txt`];
-        }
-        this.ctn.embeds = [embed];
-        this.send();
     }
 }
