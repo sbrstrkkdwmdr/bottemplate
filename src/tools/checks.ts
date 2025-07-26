@@ -1,42 +1,75 @@
 import * as Discord from 'discord.js';
 import * as fs from 'fs';
+import { format } from 'util';
 import * as helper from '../helper';
 import * as path from '../path';
 import * as bottypes from '../types/bot';
-
+import { Dict } from '../types/tools';
+type prototypes = 'undefined' | 'object' | 'boolean' | 'number' | 'bigint' | 'string' | 'symbol' | 'function' | 'array';
+type cfgKey = [boolean, Dict<cfgKey>, prototypes, any];
 export function checkConfig() {
-    const config = JSON.parse(fs.readFileSync(path.precomp + '/config/config.json', 'utf-8'));
-    if (!config.hasOwnProperty("token")) {
-        throw new Error('missing `token` value in config');
-    }
-    if (!config.hasOwnProperty("prefix") || typeof config["prefix"] != "string") {
-        log.stdout("Prefix value is either missing or an invalid type\nThe default value of `!` will be used");
-        config['prefix'] = '!';
-    }
-    if (!config.hasOwnProperty("owners")) {
-        log.stdout("owners value is either missing or an invalid type\nThe default value of `['INVALID_ID']` will be used");
-        config['owners'] = ['INVALID_ID'];
-    }
-    if (config.hasOwnProperty("logs")) {
-        if (!config["logs"].hasOwnProperty("console") || typeof config["logs"]["console"] != "boolean") {
-            log.stdout("logs.console value is either missing or an invalid type\nThe default value of `true` will be used");
-            config['logs']['console'] = false;
-
-        }
-        if (!config["logs"].hasOwnProperty("file") || typeof config["logs"]["file"] != "boolean") {
-            log.stdout("logs.file value is either missing or an invalid type\nThe default value of `true` will be used");
-            config['logs']['file'] = false;
-
-        }
-    } else {
-        log.stdout("Missing log options. Using default values {console:true,file:true}");
-        config['logs'] = {
-            console: true,
-            file: true
-        };
-
-    }
+    console.log('Initialising config...');
+    let config = getcfg();
+    const keys: Dict<cfgKey> = {
+        'token': [true, null, 'string', null],
+        'prefix': [false, null, 'string', 'sbr-'],
+        'owners': [false, null, 'array', ['INVALID_ID']],
+        'logs': [false,
+            {
+                'console': [false, null, 'boolean', true],
+                'file': [false, null, 'boolean', true],
+            },
+            'object', {
+                console: true,
+                file: true,
+            }],
+    };
+    config = iterateConfigKeys(config, keys);
     return config as bottypes.config;
+}
+
+function getcfg() {
+    try {
+        const p = JSON.parse(fs.readFileSync(path.precomp + '/config/config.json', 'utf-8'));
+        return p;
+    } catch (err) {
+        return {
+            "token": process.env.DISCORD_TOKEN ?? undefined,
+            "prefix": process.env.PREFIX ?? "sbr-",
+            "owners": ["id1", "id2"],
+            "logs": {
+                "console": true,
+                "file": true
+            }
+        };
+    }
+}
+
+function iterateConfigKeys(cfg: any, keys: Dict<cfgKey>) {
+    for (const key in keys) {
+        console.log('Checking config key: ' + key);
+        if (keys[key][2] == 'object') {
+            if (cfg.hasOwnProperty(key)) {
+                cfg[key] = iterateConfigKeys(cfg[key], keys[key][1]);
+            } else if (keys[key][0]) {
+                throw new Error(`missing ${key} value in config`);
+            } else {
+                console.log(`Property ${key} is either missing or invalid. Setting to default value of ${format(keys[key][3])}`);
+                cfg[key] = keys[key][3];
+            }
+        } else if (keys[key][2] == 'array') {
+            if (!cfg.hasOwnProperty(key)) {
+                if (keys[key][0]) throw new Error(`Property ${key} is missing. Bot cannot run without this property`);
+                console.log(`Property ${key} is either missing or invalid. Setting to default value of ${format(keys[key][3])}`);
+                cfg[key] = keys[key][3];
+            }
+        } else if (!cfg.hasOwnProperty(key) || typeof cfg[key] != keys[key][2]) {
+            if (keys[key][0]) throw new Error(`Property ${key} is invalid. Make sure key is set to type ${format(keys[key][2])}`);
+            console.log(`Property ${key} is either missing or invalid. Setting to default value of ${format(keys[key][3])}`);
+            cfg[key] = keys[key][3];
+        }
+    }
+    return cfg;
 }
 
 /**
