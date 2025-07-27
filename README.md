@@ -96,7 +96,8 @@ disabling these permissions will disable the commands listed
 -   to add parameters, modify the params property in the new command and then set the default value of each arg in the constructor
 
 ```ts
-class Test extends Command {
+// src/commands/Test.ts
+export class Test extends Command {
     // set param types
     // because params is already defined in Command, it requires the `declare` keyword
     protected declare params: {
@@ -281,18 +282,79 @@ async execute() {
 -   in `src/commandHandler` add the command name and it's aliases to the switch statement `commandSelect()` like so:
 
 ```ts
+// src/commandHandler.ts
+
+import { Test } from "./commands/Test";
+
+export class CommandHandler extends InputHandler {
+    //...
     commandSelect(cmd: string, args: string[]) {
         switch (cmd) {
-            case 'test':
-                command = new helper.commands.command.Test();
+            //... other commands
+            case "test":
+                command = new Test();
                 break;
         }
         return args;
     }
+    //...
+}
 ```
 
 -   if the command uses embeds, or has other requirements, you can add its name to the arrays in commandCheck
 
 -   if the command also takes button inputs, you can add it to the switch statement at the bottom of `async onInteraction()` in `src/buttonHandler.ts`
 
+```ts
+import { Test } from "./commands/Test";
+//src/buttonHandler.ts
+export class ButtonHandler extends InputHandler {
+    //...
+    commandSelect(cmd: string, interaction: Discord.ButtonInteraction) {
+        switch (cmd.toLowerCase()) {
+            //...
+            case "Test":
+                this.selected = new Test();
+                break;
+            default:
+                //...
+        }
+    }
+}
+```
+
 -   if the command is meant to be a `/` (slash) command add it to `src/slashCommands.ts` at the bottom of `commands?.set` in `run()`
+
+```ts
+// src/slashCommands.ts
+function run() {
+    commands?.set([
+        //...
+        {
+            name: "test",
+            description: "test command",
+            dmPermission: false,
+            options: [
+                {
+                    name: "test",
+                    description: "Description",
+                    type: Discord.ApplicationCommandOptionType.Boolean,
+                    required: true,
+                },
+                {
+                    name: "page",
+                    description: "What page to show",
+                    type: Discord.ApplicationCommandOptionType.Integer,
+                    required: true,
+                },
+                {
+                    name: "mode",
+                    description: "What mode to use",
+                    type: Discord.ApplicationCommandOptionType.String,
+                    required: true,
+                },
+            ],
+        },
+    ]);
+}
+```
