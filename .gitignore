@@ -3,3 +3,5 @@ dist
 config.json
 config/osuauth.json
 database.sqlite
+*.lockb
+package-lock.json
