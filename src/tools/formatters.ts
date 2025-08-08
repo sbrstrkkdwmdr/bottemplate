@@ -65,8 +65,17 @@ export function toCapital(str: string) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-export function dateToDiscordFormat(date: Date, type?: 'R' | 'F') {
-    return `<t:${Math.floor(date.getTime() / 1000)}:${type ?? 'R'}>`;
+export function dateToDiscordFormat(date: Date, type: 'R' | 'F' = 'R') {
+    return `<t:${Math.floor(date.getTime() / 1000)}:${type}>`;
+}
+/**
+ * timestamp can be any valid time value
+ * 
+ * iso8601 is preferred
+ */
+export function relativeTime(timestamp: string) {
+    const date = new Date(timestamp);
+    return dateToDiscordFormat(date, 'R');
 }
 
 /**
@@ -95,3 +104,27 @@ export const filterArgRange = (value: number, args: {
     }
     return keep;
 };
+
+/**
+ * split string by every x characters
+ */
+export function splitStringBy(str: string, every: number) {
+    return str.replace(eval(`/(.{${every}})/g`), "$1 ").split(' ');
+}
+
+export function maxLength(str: string, length: number) {
+    if (str.length > length) {
+        str = str.slice(0, length - 3) + '...';
+    }
+    return str;
+}
+
+export function strictLength(str: string, length: number) {
+    if (str.length > length) {
+        str = str.slice(0, length - 3) + '...';
+    }
+    if (str.length < length) {
+        str = str.padEnd(length);
+    }
+    return str;
+}
