@@ -40,7 +40,7 @@ const client = new Client({
 
 helper.vars.client = client;
 
-client.once('ready', () => {
+client.once('clientReady', () => {
     const currentDate = new Date();
     const timetostart = currentDate.getTime() - initdate.getTime();
     log.stdout(`
