@@ -140,8 +140,8 @@ export class Help extends Command {
         const commandexamples = command.examples && command.examples.length > 0 ? command.examples.slice(0, 5).map(x => x.text).join('\n').replaceAll('PREFIXMSG', helper.vars.config.prefix) : 'none';
 
         embed.setTitle("Command info for: " + command.name)
-            .setURL(`https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands.html`)
-            .setDescription("To see full details about this command, visit [here](https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands.html)\n\n" + command.description + "\n")
+            .setURL(`https://github.com/sbrstrkkdwmdr/bottemplate/`)
+            .setDescription(command.description)
             .addFields([
                 {
                     name: 'Usage',
@@ -187,7 +187,7 @@ export class Help extends Command {
             const clembed = new Discord.EmbedBuilder()
                 .setColor(helper.colours.embedColour.info.dec)
                 .setTitle('Command List')
-                .setURL('https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands')
+                .setURL('https://github.com/sbrstrkkdwmdr/bottemplate/')
                 .setDescription('use `/help <command>` to get more info on a command')
                 .addFields(
                     commandlist.map(x => {
@@ -196,10 +196,7 @@ export class Help extends Command {
                             value: x.cmds.map(x => '`' + x + '`').join(', ')
                         };
                     })
-                )
-                .setFooter({
-                    text: 'Website: https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands | Github: https://github.com/sbrstrkkdwmdr/ssob/tree/ts'
-                });
+                );
             this.ctn.embeds = [clembed];
             this.params.commandCategory = 'default';
         } else if (this.params.command != null) {
@@ -241,7 +238,7 @@ export class Help extends Command {
             this.ctn.embeds = [new Discord.EmbedBuilder()
                 .setColor(helper.colours.embedColour.info.dec)
                 .setTitle('Help')
-                .setURL('https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands')
+                .setURL('https://github.com/sbrstrkkdwmdr/bottemplate/')
                 .setDescription(`Prefix is: MSGPREFIX
 - Use \`MSGPREFIXhelp <command>\` to get more info on a command or \`/help list\` to get a list of commands
 - \`MSGPREFIXhelp category<category>\` will list only commands from that category
@@ -251,10 +248,7 @@ export class Help extends Command {
 - You can use \`MSGPREFIXosuset\` to automatically set your osu! username and gamemode for commands such as \`recent\` (rs)
 - Mods are specified with +[mods] (include), -mx [mods] (match exact) or -me [mods] (exclude). -mx overrides +[mods]
 - Gamemode can be specified by using -(mode) in commands that support it (eg. -taiko)
-`.replaceAll('MSGPREFIX', helper.vars.config.prefix))
-                .setFooter({
-                    text: 'Website: https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands | Github: https://github.com/sbrstrkkdwmdr/ssob/tree/ts'
-                })];
+`.replaceAll('MSGPREFIX', helper.vars.config.prefix))];
             this.params.commandCategory = 'default';
         }
     }
@@ -271,7 +265,7 @@ export class Help extends Command {
         this.params.commandfound = true;
         if (desctxt.length > 4000) {
             desctxt = desctxt.slice(0, 3900);
-            desctxt += "\n\nThe text has reached maximum length. See [here](https://sbrstrkkdwmdr.github.io/projects/ssob_docs/commands) for the rest of the commands";
+            desctxt += "\n\nThe text has reached maximum length. See [here](https://github.com/sbrstrkkdwmdr/bottemplate/) for the rest of the commands";
         }
         return desctxt;
     }
